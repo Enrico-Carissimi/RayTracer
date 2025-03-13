@@ -26,7 +26,7 @@ public:
     void checkCoordinates(int i, int j) {
         if (!validCoordinates(i, j)) {
             std::cout << "ERROR: trying to access invalid image coordinates (" << i << ", " << j << ")\n";
-            std::cout << "images size is " << _width << " x " << _height << std::endl;
+            std::cout << "image size is " << _width << " x " << _height << std::endl;
             exit(-1);
         }
         return;
