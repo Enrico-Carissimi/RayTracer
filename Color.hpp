@@ -1,3 +1,6 @@
+#ifndef __Color__
+#define __Color__
+
 class Color {
 public:
     float r, g, b;
@@ -14,3 +17,4 @@ public:
     }
 };
 
+#endif
