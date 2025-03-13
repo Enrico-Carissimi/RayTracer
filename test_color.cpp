@@ -8,28 +8,66 @@ int main() {
     // First test: must be "close"
     assert(color.isClose(Color(1.0f, 2.0f, 3.0f)));
     std::cout << "Test 1 passed" << std::endl;
-
-    // Second test: must not be "close"
+    // First test (negative): must NOT be "close"
     assert(!color.isClose(Color(3.0f, 4.0f, 5.0f)));
-    std::cout << "Test 2 passed" << std::endl;
+    std::cout << "Test 1 (negative) passed" << std::endl;
 
-    // Def new colors
+    // Define new colors
     Color col1(1.0f, 2.0f, 3.0f);
     Color col2(5.0f, 7.0f, 9.0f);
 
-    // Third test: Sum
+    // Second test: Sum
     assert((col1 + col2).isClose(Color(6.0f, 9.0f, 12.0f)));
-    std::cout << "Test 3 (sum) passed" << std::endl;
+    std::cout << "Test 2 (sum) passed" << std::endl;
+    // Second test (negative)
+    assert(!( (col1 + col2).isClose(Color(0.0f, 0.0f, 0.0f)) ));
+    std::cout << "Test 2 (sum negative) passed" << std::endl;
 
-    // Fourth test: multiply component by component
+    // Third test: multiply component by component
     assert((col1 * col2).isClose(Color(5.0f, 14.0f, 27.0f)));
-    std::cout << "Test 4 (multiply component by component) passed" << std::endl;
+    std::cout << "Test 3 (multiply component-wise) passed" << std::endl;
+    // Third test (negative)
+    assert(!( (col1 * col2).isClose(Color(1.0f, 1.0f, 1.0f)) ));
+    std::cout << "Test 3 (multiply component-wise negative) passed" << std::endl;
+
+    // Fourth test: scalar multiplication by 2.0
+    Color result = col1 * 2.0f;
+    assert(result.isClose(Color(2.0f, 4.0f, 6.0f)));
+    std::cout << "Test 4 (multiply by 2.0) passed" << std::endl;
+    // Fourth test (negative)
+    assert(!(result.isClose(Color(9.0f, 9.0f, 9.0f))));
+    std::cout << "Test 4 (multiply by 2.0 negative) passed" << std::endl;
+
+    // Fifth test: scalar multiplication by 0.5
+    Color result2 = col1 * 0.5f;
+    assert(result2.isClose(Color(0.5f, 1.0f, 1.5f)));
+    std::cout << "Test 5 (multiply by 0.5) passed" << std::endl;
+    // Fifth test (negative)
+    assert(!(result2.isClose(Color(0.0f, 0.0f, 0.0f))));
+    std::cout << "Test 5 (multiply by 0.5 negative) passed" << std::endl;
+
+    // Sixth test: scalar multiplication by 0
+    Color result3 = col1 * 0.0f;
+    assert(result3.isClose(Color(0.0f, 0.0f, 0.0f)));
+    std::cout << "Test 6 (multiply by 0) passed" << std::endl;
+    // Sixth test (negative)
+    assert(!(result3.isClose(Color(1.0f, 2.0f, 3.0f))));
+    std::cout << "Test 6 (multiply by 0 negative) passed" << std::endl;
+
+    // Seventh test: scalar multiplication by negative number
+    Color result4 = col1 * (-1.0f);
+    assert(result4.isClose(Color(-1.0f, -2.0f, -3.0f)));
+    std::cout << "Test 7 (multiply by -1.0) passed" << std::endl;
+    // Seventh test (negative)
+    assert(!(result4.isClose(Color(1.0f, 2.0f, 3.0f))));
+    std::cout << "Test 7 (multiply by -1.0 negative) passed" << std::endl;
 
     // ----------------------
-    // (You can reactivate the test that must fail)
+    // (Optional test that must fail if uncommented)
     // ----------------------
     // assert(color.isClose(Color(9.0f, 9.0f, 9.0f)));  // MUST FAIL
     // std::cout << "Test that must fail passed" << std::endl;
 
     return 0;
 }
+
