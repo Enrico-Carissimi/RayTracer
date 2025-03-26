@@ -3,7 +3,13 @@
 
 #include <iostream>
 #include <vector>
+#include <cmath>
 #include "Color.hpp"
+
+float clamp(float x) {
+
+    return x / (1 + x);
+}
 
 class HDRImage {
 public:
@@ -42,6 +48,46 @@ public:
         _pixels[pixelIndex(i, j)] = color;
         return;
     }
+
+    float averageLuminosity(float delta = 1e-10){
+
+        float sum = 0.0;
+        for (const Color &pixel : _pixels) {
+            sum += std::log10(pixel.luminosity() + delta);
+        }
+
+        sum /= _pixels.size();
+
+        return std::pow(10, sum);
+
+    }
+
+    float normalizeImage(float a, float luminosity = 0.0) {
+
+        if (luminosity == 0.0) {
+
+            luminosity = averageLuminosity();
+            return luminosity;
+        }
+
+        //calculate the scale factor
+        float scale = a / luminosity;
+
+        for (Color& pixel: _pixels) {
+
+            pixel = pixel * scale;
+        }
+    }
+
+   float clampImage() {
+
+    for (Color& pixel: _pixels) {
+        pixel.r = clamp(pixel.r);
+        pixel.g = clamp(pixel.g);
+        pixel.b = clamp(pixel.b);
+    }
+
+   }
 
 private:
     int _width, _height;
