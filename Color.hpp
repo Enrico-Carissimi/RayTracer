@@ -1,6 +1,7 @@
-#include <cmath>
 #ifndef __Color__
 #define __Color__
+#include <cmath>
+#include <algorithm>
 
 class Color {
 public:
@@ -25,6 +26,15 @@ public:
         return (std::fabs(r - other.r) < epsilon) &&
                (std::fabs(g - other.g) < epsilon) &&
                (std::fabs(b - other.b) < epsilon);
+    }
+
+    float luminosity() const {
+
+        float maxVal = std::max({r, g, b});
+        float minVal = std::min({r, g, b});
+
+        return (maxVal + minVal) / 2.0f;
+        
     }
     
 };
