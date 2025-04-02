@@ -8,10 +8,12 @@
 #include <stdexcept>
 #include <sstream>
 
+#include "HDRImage.hpp"
+
 enum class Endianness {LITTLE, BIG};
 
-float readFloat(std::istream &stream, Endianness endianness) {
-    uint8_t bytes[4];  
+float readFloat(std::istream& stream, Endianness endianness) {
+    uint8_t bytes[4];
     stream.read(reinterpret_cast<char*>(bytes), 4);
 
     if (stream.gcount() != 4) {  
@@ -31,23 +33,31 @@ float readFloat(std::istream &stream, Endianness endianness) {
     return result;
 }
 
-std::pair<int, int> parseImageSize(std::istream &stream) {
-    std::string line;
-    std::getline(stream, line);
+std::string readLine(std::istream& stream){
+    std::string buffer;
+    if (!std::getline(stream, buffer)) throw std::runtime_error("ERROR: impossible to read line");
+    return buffer;
+}
+
+std::pair<int, int> parseImageSize(const std::string& line) {
     std::istringstream iss(line);
     int width, height;
     
     if (!(iss >> width >> height)) {
-        throw std::runtime_error("ERROR: invalid image size format, 2 int expected");
+        throw std::invalid_argument("ERROR: invalid image size format, 2 int expected");
     }
     if (width <= 0 || height <= 0) {
-        throw std::runtime_error("ERROR: image dimensions must be positive integers");
+        throw std::invalid_argument("ERROR: image dimensions must be positive integers");
+    }
+    std::string buffer;
+    if (iss >> buffer) {
+        throw std::runtime_error("ERROR: too many values in size line");
     }
 
     return {width, height};
 }
 
-enum Endianness parseEndianness(const std::string &line) {
+enum Endianness parseEndianness(const std::string& line) {
     float endianness;
     try {
         endianness = std::stof(line);
@@ -57,7 +67,7 @@ enum Endianness parseEndianness(const std::string &line) {
 
     if (endianness > 0.0f) return Endianness::BIG;
     if (endianness < 0.0f) return Endianness::LITTLE;
-    throw std::runtime_error("ERROR: unexpected scale factor: \"" + line + "\", must be non-zero");
+    throw std::invalid_argument("ERROR: endianness must be non-zero");
 }
 
 #endif

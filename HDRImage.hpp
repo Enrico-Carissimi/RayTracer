@@ -2,9 +2,11 @@
 #define __HDRImage__
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <cmath>
 #include "Color.hpp"
+#include "PFMreader.hpp"
 
 float clamp(float x) {
 
@@ -19,6 +21,15 @@ public:
         for (int i = 0; i < _width * _height; i++) {
             _pixels[i] = Color(); // defaults to black
         }
+    }
+
+    HDRImage(std::istream& input) {
+        readPFM(input);
+    }
+
+    HDRImage(const std::string& fileName) {
+        std::ifstream input(fileName);
+        readPFM(input);
     }
 
     int pixelIndex(int i, int j) {
@@ -79,19 +90,43 @@ public:
         }
     }
 
-   float clampImage() {
-
-    for (Color& pixel: _pixels) {
-        pixel.r = clamp(pixel.r);
-        pixel.g = clamp(pixel.g);
-        pixel.b = clamp(pixel.b);
+    void clampImage() {
+        for (Color& pixel: _pixels) {
+            pixel.r = clamp(pixel.r);
+            pixel.g = clamp(pixel.g);
+            pixel.b = clamp(pixel.b);
+        }
     }
 
-   }
+    int _width, _height;
 
 private:
-    int _width, _height;
     std::vector<Color> _pixels; // maybe use smart pointers?
+
+    void readPFM(std::istream& input) {
+        // magic
+        std::string magic = readLine(input);
+        if (magic != "PF") {
+            throw std::invalid_argument("ERROR: invalid magic string \"" + magic + "\", must be \"PF\" for a PFM file");
+        }
+        
+        // image dimensions (width, height)
+        auto [width, height] = parseImageSize(readLine(input)); // maybe [_width, _height] = ... works?
+        _width = width, _height = height;
+    
+        // endianness
+        auto endianness = parseEndianness(readLine(input));
+    
+        
+        // fill the image
+        _pixels = std::vector<Color>(_width * _height);
+        for (int j = height - 1; j >= 0; j--) {
+            for (int i = 0; i < width; i++) {
+                float r = readFloat(input, endianness), g = readFloat(input, endianness), b = readFloat(input, endianness);
+                setPixel(i, j, Color(r, g, b));
+            }
+        }
+    }
 };
 
 #endif
