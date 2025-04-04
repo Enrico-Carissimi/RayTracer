@@ -1,5 +1,6 @@
 #ifndef __Color__
 #define __Color__
+
 #include <cmath>
 #include <algorithm>
 
@@ -29,14 +30,15 @@ public:
     }
 
     float luminosity() const {
-
         float maxVal = std::max({r, g, b});
         float minVal = std::min({r, g, b});
 
-        return (maxVal + minVal) / 2.0f;
-        
+        return (maxVal + minVal) * 0.5f; 
     }
-    
 };
+
+std::ostream& operator<<(std::ostream& stream, const Color& color) {
+    return stream << "Color (r = " << color.r << ", g = " << color.g << ", b = " << color.b << ")";
+}
 
 #endif
