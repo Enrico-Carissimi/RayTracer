@@ -33,3 +33,8 @@
 
 # Visual Studio Code
 .vscode/*
+
+# Test images
+*.png
+*.jpg
+*.jpeg
