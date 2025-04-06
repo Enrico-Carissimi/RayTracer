@@ -28,8 +28,10 @@ int main() {
 
     // set and get fail automatically
     image.setPixel(0, 0, Color(1., 1., 1.)); // correct
+    bool exceptionThrown = false;
     try{image.getPixel(-2, 0);} // illegal, should get error message
-    catch(std::exception& e){cout << e.what() << endl;}
+    catch(std::exception& e){exceptionThrown = true;}
+    assert(exceptionThrown);
 
     // check average luminosity
     image = HDRImage(2, 1); // reset to black
