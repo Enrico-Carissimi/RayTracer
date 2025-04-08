@@ -10,14 +10,18 @@
 
 #include "HDRImage.hpp"
 
+
+
 enum class Endianness {LITTLE, BIG};
+
+
 
 float readFloat(std::istream& stream, Endianness endianness) {
     uint8_t bytes[4];
     stream.read(reinterpret_cast<char*>(bytes), 4);
 
     if (stream.gcount() != 4) {  
-        throw std::runtime_error("ERROR: impossible to read 4 bytes");
+        throw std::runtime_error("ERROR: impossible to read 4 bytes, only " + std::to_string(stream.gcount()) + " available");
     }
 
     uint32_t intBuffer;
@@ -33,7 +37,30 @@ float readFloat(std::istream& stream, Endianness endianness) {
     return result;
 }
 
-std::string readLine(std::istream& stream){
+// from prof. Tomasi lecture (adapted code style)
+void writeFloat(std::ostream& stream, float value, Endianness endianness) {
+    // Convert "value" in a sequence of 32 bit
+    uint32_t doubleWord{*((uint32_t*) &value)};
+  
+    // Extract the four bytes in "doubleWord" using bit-level operators
+    uint8_t bytes[] = {
+        static_cast<uint8_t>(doubleWord & 0xff),         // Least significant byte
+        static_cast<uint8_t>((doubleWord >> 8) & 0xff),
+        static_cast<uint8_t>((doubleWord >> 16) & 0xff),
+        static_cast<uint8_t>((doubleWord >> 24) & 0xff), // Most significant byte
+    };
+  
+    switch (endianness) {
+    case Endianness::LITTLE:
+        for (int i{}; i < 4; ++i) stream << bytes[i]; break; // Forward loop   
+    case Endianness::BIG:
+        for (int i{3}; i >= 0; --i) stream << bytes[i]; break; // Backward loop
+    }
+}
+
+
+
+std::string readLine(std::istream& stream) {
     std::string buffer;
     if (!std::getline(stream, buffer)) throw std::runtime_error("ERROR: impossible to read line");
     return buffer;
@@ -62,7 +89,7 @@ enum Endianness parseEndianness(const std::string& line) {
     try {
         endianness = std::stof(line);
     } catch (const std::exception& e) {
-        std::cout << "ERROR: invalid endianness format \"" + line + "\", must be a float" << std::endl;
+        throw std::invalid_argument("ERROR: invalid endianness format \"" + line + "\", must be a float");
     }
 
     if (endianness > 0.0f) return Endianness::BIG;
@@ -71,4 +98,3 @@ enum Endianness parseEndianness(const std::string& line) {
 }
 
 #endif
-
