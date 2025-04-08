@@ -5,13 +5,23 @@
 #include <fstream>
 #include <vector>
 #include <cmath>
+#include <stdexcept>
+#include <filesystem>
+#include <string>
+
 #include "Color.hpp"
 #include "PFMreader.hpp"
 
-float clamp(float x) {
+#define STB_IMAGE_WRITE_IMPLEMENTATION // needed for stb
+#include "lib/stb_image_write.h"
 
+
+
+float clamp(float x) {
     return x / (1 + x);
 }
+
+
 
 class HDRImage {
 public:
@@ -28,8 +38,10 @@ public:
     }
 
     HDRImage(const std::string& fileName) {
-        std::ifstream input(fileName);
+        std::ifstream input(fileName, std::ios::binary);
+        if (input.fail()) throw std::runtime_error("ERROR: impossible to open file \"" + fileName + "\"");
         readPFM(input);
+        input.close();
     }
 
     int pixelIndex(int i, int j) {
@@ -42,9 +54,8 @@ public:
 
     void checkCoordinates(int i, int j) {
         if (!validCoordinates(i, j)) {
-            std::cout << "ERROR: trying to access invalid image coordinates (" << i << ", " << j << ")\n";
-            std::cout << "image size is " << _width << " x " << _height << std::endl;
-            exit(-1);
+            throw std::invalid_argument("ERROR: trying to access invalid image coordinates (" + std::to_string(i) + ", " + std::to_string(j) + "), "
+                                        + "image size is " + std::to_string(_width) + " x " + std::to_string(_height));
         }
         return;
     }
@@ -61,31 +72,25 @@ public:
     }
 
     float averageLuminosity(float delta = 1e-10){
-
         float sum = 0.0;
-        for (const Color &pixel : _pixels) {
+        for (const Color& pixel : _pixels) {
             sum += std::log10(pixel.luminosity() + delta);
         }
 
         sum /= _pixels.size();
 
         return std::pow(10, sum);
-
     }
 
-    float normalizeImage(float a, float luminosity = 0.0) {
-
+    void normalizeImage(float a, float luminosity = 0.0) {
         if (luminosity == 0.0) {
-
             luminosity = averageLuminosity();
-            return luminosity;
         }
 
-        //calculate the scale factor
+        // calculate the scale factor
         float scale = a / luminosity;
 
         for (Color& pixel: _pixels) {
-
             pixel = pixel * scale;
         }
     }
@@ -98,10 +103,19 @@ public:
         }
     }
 
+    // @brief saves the image as the format specified by the extension of fileName (pfm, png, jpeg)
+    void save(std::string fileName) {
+        auto extension = std::filesystem::path(fileName).extension();
+        if (extension == ".pfm") {writePFM(fileName); return;}
+        if (extension == ".png") {writePNG(fileName); return;}
+        if (extension == ".jpg" || extension == ".jpeg") {writeJPG(fileName); return;}
+        throw std::invalid_argument("ERROR: file extension \"" + extension.string() + "\" is not supported");
+    }
+
     int _width, _height;
 
 private:
-    std::vector<Color> _pixels; // maybe use smart pointers?
+    std::vector<Color> _pixels;
 
     void readPFM(std::istream& input) {
         // magic
@@ -116,16 +130,57 @@ private:
     
         // endianness
         auto endianness = parseEndianness(readLine(input));
-    
         
         // fill the image
         _pixels = std::vector<Color>(_width * _height);
-        for (int j = height - 1; j >= 0; j--) {
-            for (int i = 0; i < width; i++) {
+        for (int j = _height - 1; j >= 0; j--) {
+            for (int i = 0; i < _width; i++) {
                 float r = readFloat(input, endianness), g = readFloat(input, endianness), b = readFloat(input, endianness);
-                setPixel(i, j, Color(r, g, b));
+                //c = c + 12;
+                setPixel(i, j, Color(r, g, b)); // readFloat can't be called inside the constructor because r, g, b are not evaluated in order
             }
         }
+    }
+
+    //@brief converts the pixels to 1 byte ints from 0 to 255;
+    //@brief the HDR pixels must be normalized before calling this function
+    std::vector<uint8_t> pixelsToLDR() {
+        std::vector<uint8_t> data;
+        data.reserve(3 * _width * _height); // reserve memory but don't initialize it, so we can use push_back
+        for (Color& color : _pixels) {
+            data.emplace_back(255 * color.r), data.emplace_back(255 * color.g), 255 * data.emplace_back(255 * color.b);
+        }
+
+        return data; // I think this moves the vector without copying it automatically?
+    }
+
+    void writePFM(std::string fileName) {
+        std::ofstream output(fileName, std::ios::binary);
+
+        // write header, always little endian
+        output << "PF\n" << _width << " " << _height << "\n-1.0\n";
+
+        // write pixels
+        for (int j = _height - 1; j >= 0; j--) {
+            for (int i = 0; i < _width; i++) {
+                auto pixel = getPixel(i, j);
+                writeFloat(output, pixel.r, Endianness::LITTLE);
+                writeFloat(output, pixel.g, Endianness::LITTLE);
+                writeFloat(output, pixel.b, Endianness::LITTLE);
+            }
+        }
+    }
+
+    void writePNG(std::string fileName) {
+        // to use stbi_write we need to convert string to char* and vector to pointer
+        // 3 * width is the distance in bytes between the first byte of a row and
+        // the first one of the next, 1 byte per uint8, 3 floats per color
+        stbi_write_png(fileName.c_str(), _width, _height, 3, &pixelsToLDR()[0], 3 * _width);
+    }
+
+    void writeJPG(std::string fileName) {
+        // the last parameter is image quality, 100 is max
+        stbi_write_jpg(fileName.c_str(), _width, _height, 3, &pixelsToLDR()[0], 100);
     }
 };
 
