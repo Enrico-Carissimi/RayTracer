@@ -35,10 +35,10 @@ int main(int argc, char* argv[]) {
 
     parseCommandLine(argc, argv, inputFile, a, gamma, outputFile);
 
-    HDRImage image(argv[1]);
+    HDRImage image(inputFile);
     image.normalize(a);
     image.clamp();
-    image.save(argv[4]); // add error message if it fails to save?
+    image.save(outputFile, gamma); // add error message if it fails to save?
 
     return 0;
 }

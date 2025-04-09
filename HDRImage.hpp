@@ -104,11 +104,11 @@ public:
     }
 
     // @brief saves the image as the format specified by the extension of fileName (pfm, png, jpeg)
-    void save(std::string fileName) {
+    void save(std::string fileName, float gamma) {
         auto extension = std::filesystem::path(fileName).extension();
         if (extension == ".pfm") {writePFM(fileName); return;}
-        if (extension == ".png") {writePNG(fileName); return;}
-        if (extension == ".jpg" || extension == ".jpeg") {writeJPG(fileName); return;}
+        if (extension == ".png") {writePNG(fileName, gamma); return;}
+        if (extension == ".jpg" || extension == ".jpeg") {writeJPG(fileName, gamma); return;}
         throw std::invalid_argument("ERROR: file extension \"" + extension.string() + "\" is not supported");
     }
 
@@ -143,11 +143,13 @@ private:
 
     //@brief converts the pixels to 1 byte ints from 0 to 255;
     //@brief the HDR pixels must be normalized before calling this function
-    std::vector<uint8_t> pixelsToLDR() {
+    std::vector<uint8_t> pixelsToLDR(float gamma = 1.0f) {
         std::vector<uint8_t> data;
         data.reserve(3 * _width * _height); // reserve memory but don't initialize it, so we can use push_back
         for (Color& color : _pixels) {
-            data.emplace_back(255 * color.r), data.emplace_back(255 * color.g), 255 * data.emplace_back(255 * color.b);
+            data.emplace_back(255 * std::pow(color.r, gamma));
+            data.emplace_back(255 * std::pow(color.g, gamma));
+            data.emplace_back(255 * std::pow(color.b, gamma));
         }
 
         return data; // I think this moves the vector without copying it automatically?
@@ -170,16 +172,16 @@ private:
         }
     }
 
-    void writePNG(std::string fileName) {
+    void writePNG(std::string fileName, float gamma) {
         // to use stbi_write we need to convert string to char* and vector to pointer
         // 3 * width is the distance in bytes between the first byte of a row and
         // the first one of the next, 1 byte per uint8, 3 floats per color
-        stbi_write_png(fileName.c_str(), _width, _height, 3, &pixelsToLDR()[0], 3 * _width);
+        stbi_write_png(fileName.c_str(), _width, _height, 3, &pixelsToLDR(gamma)[0], 3 * _width);
     }
 
-    void writeJPG(std::string fileName) {
+    void writeJPG(std::string fileName, float gamma) {
         // the last parameter is image quality, 100 is max
-        stbi_write_jpg(fileName.c_str(), _width, _height, 3, &pixelsToLDR()[0], 100);
+        stbi_write_jpg(fileName.c_str(), _width, _height, 3, &pixelsToLDR(gamma)[0], 100);
     }
 };
 
