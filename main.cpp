@@ -1,55 +1,44 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include "Parameters.hpp"
 #include "HDRImage.hpp"
-#include "PFMReader.hpp"
+
+const unsigned int EXPECTED_ARGS = 4;
+
+void parseCommandLine(int argc, char* argv[], std::string& input, float& factor, float& gamma, std::string& output) {
+    if (argc != EXPECTED_ARGS + 1)
+        throw std::invalid_argument("ERROR: program expects " + std::to_string(EXPECTED_ARGS) + " arguments, "
+                                    + std::to_string(argc - 1) + " where given\nusage: ./main <input> <a> <gamma> <output>");
+
+    input = argv[1];
+
+    try {
+        factor = std::stof(argv[2]);
+    } catch (const std::exception&) {
+        throw std::runtime_error("ERROR: factor must be a floating-point number");
+    }
+
+    try {
+        gamma = std::stof(argv[3]);
+    } catch (const std::exception&) {
+        throw std::runtime_error("ERROR: gamma must be a floating-point number");
+    }
+
+    output = argv[4];
+}
+
+
 
 int main(int argc, char* argv[]) {
-    Parameters parameters;
-    
-    try {
-        // Converto argv in un vettore di stringhe per facilitarne la gestione
-        std::vector<std::string> args(argv, argv + argc);
-        parameters.parse_command_line(args);
-    } catch (const std::exception& err) {
-        std::cerr << "Error: " << err.what() << std::endl;
-        return 1;
-    }
+    float a, gamma; // !!! they must be positive too !!!
+    std::string inputFile, outputFile;
 
-    try {
-        // Read PFM Image
-        std::ifstream inputFile(parameters.input_pfm_file_name, std::ios::binary);
-        if (!inputFile) {
-            throw std::runtime_error("Error: Cannot open input file.");
-        }
+    parseCommandLine(argc, argv, inputFile, a, gamma, outputFile);
 
-        HDRImage image(argv[1]);
-        inputFile.close();
-
-        std::cout << "File \"" << parameters.input_pfm_file_name << "\" has been read from disk.\n";
-
-        // Normalize the Image
-        image.normalizeImage(parameters.factor);
-
-        // Clamping 
-        image.clampImage();
-
-        // Scrivo l'immagine LDR (PNG)
-        std::ofstream outputFile(parameters.output_png_file_name, std::ios::binary);
-        if (!outputFile) {
-            throw std::runtime_error("Error: Cannot open output file.");
-        }
-        // Serve la funzione che scrive
-        //img.write_ldr_image(outputFile, "PNG", parameters.gamma);
-        outputFile.close();
-        
-        std::cout << "File \"" << parameters.output_png_file_name << "\" has been written to disk.\n";
-
-    } catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << std::endl;
-        return 1;
-    }
+    HDRImage image(argv[1]);
+    image.normalize(a);
+    image.clamp();
+    image.save(argv[4]); // add error message if it fails to save?
 
     return 0;
 }
