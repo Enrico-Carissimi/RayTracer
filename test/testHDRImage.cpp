@@ -41,12 +41,12 @@ int main() {
     assert(isClose(image.averageLuminosity(0.), 100.));
 
     // test normalization
-    image.normalizeImage(1000., 100.);
+    image.normalize(1000., 100.);
     assert(image.getPixel(0, 0).isClose(Color(0.5e2, 1.0e2, 1.5e2)));
     assert(image.getPixel(1, 0).isClose(Color(0.5e4, 1.0e4, 1.5e4)));
 
     // test clamp
-    image.clampImage();
+    image.clamp();
     for (int i = 0; i < 2; i++) { // check that the rgb values are within the expected boundaries
         auto pixel = image.getPixel(i, 0);
         assert((pixel.r >= 0) && (pixel.r <= 1));

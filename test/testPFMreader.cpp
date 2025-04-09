@@ -148,8 +148,8 @@ int main(){
     // test writing LDR formats
     stream = streamFromArray(TEST_WRITE_BYTES, 84);
     image = HDRImage(stream);
-    image.normalizeImage(1., image.averageLuminosity());
-    image.clampImage();
+    image.normalize(1., image.averageLuminosity());
+    image.clamp();
     image.save("test/test.png");
     image.save("test/test.jpeg");
     testException("test/test.gif", [&image](std::string s) -> auto {return image.save(s);});

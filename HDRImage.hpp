@@ -82,7 +82,7 @@ public:
         return std::pow(10, sum);
     }
 
-    void normalizeImage(float a, float luminosity = 0.0) {
+    void normalize(float a, float luminosity = 0.0) {
         if (luminosity == 0.0) {
             luminosity = averageLuminosity();
         }
@@ -95,11 +95,11 @@ public:
         }
     }
 
-    void clampImage() {
+    void clamp() {
         for (Color& pixel: _pixels) {
-            pixel.r = clamp(pixel.r);
-            pixel.g = clamp(pixel.g);
-            pixel.b = clamp(pixel.b);
+            pixel.r = ::clamp(pixel.r);
+            pixel.g = ::clamp(pixel.g);
+            pixel.b = ::clamp(pixel.b);
         }
     }
 
@@ -136,7 +136,6 @@ private:
         for (int j = _height - 1; j >= 0; j--) {
             for (int i = 0; i < _width; i++) {
                 float r = readFloat(input, endianness), g = readFloat(input, endianness), b = readFloat(input, endianness);
-                //c = c + 12;
                 setPixel(i, j, Color(r, g, b)); // readFloat can't be called inside the constructor because r, g, b are not evaluated in order
             }
         }
