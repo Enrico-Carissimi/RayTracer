@@ -6,44 +6,42 @@
 #include <string>
 #include <sstream>
 #include "Vec3.hpp"
+#include "utils.hpp"
 
 struct Point3 {
     float x, y, z;
 
-    // Costruttore
-    Point3(float x = 0, float y = 0, float z = 0) : x(x), y(y), z(z) {}
+    Point3(float x = 0., float y = 0., float z = 0.) : x(x), y(y), z(z) {}
 
-    // Conversione in stringa
-    std::string to_string() const {
+    // Conversion to string
+    std::string toString() const {
         std::ostringstream oss;
-        oss << "Point3(x=" << x << ", y=" << y << ", z=" << z << ")";
+        oss << "Point3 (x = " << x << ", y = " << y << ", z = " << z << ")";
         return oss.str();
     }
 
-    // Confronto tra punti (per test)
-    bool operator==(const Point3& other) const {
-        return (x == other.x && y == other.y && z == other.z);
-    }
-
-    // Somma tra Point3 e Vec3, ritorna un Point3
-    Point3 operator+(const Vec3& v) const {
+    // Sum and difference between Point3 e Vec3, returns a Point3
+    inline Point3 operator+(const Vec3& v) const {
         return Point3(x + v.x, y + v.y, z + v.z);
     }
-
-    // Differenza tra due punti, ritorna un Vec
-    Vec3 operator-(const Point3& other) const {
-        return Vec3(x - other.x, y - other.y, z - other.z);
-    }
-
-    // Differenza tra Point3 e Vec, ritorna un Point3
-    Point3 operator-(const Vec3& v) const {
+    inline Point3 operator-(const Vec3& v) const {
         return Point3(x - v.x, y - v.y, z - v.z);
     }
 
-    // Conversione da Point3 a Vec3
-    Vec3 to_vec() const {
-        return Vec3(x, y, z);
+    // Difference between two points, returns a Vec3
+    inline Vec3 operator-(const Point3& other) const {
+        return Vec3(x - other.x, y - other.y, z - other.z);
+    }
+
+    // Conversion to Vec3
+    inline Vec3 toVec() const { return Vec3(x, y, z); }
+
+    // Comparison for tests
+    bool isClose(Point3 other, float epsilon = 1e-5f) {
+        return areClose(*this, other, epsilon);
     }
 };
 
-#endif 
+std::ostream& operator<<(std::ostream& stream, const Point3& p) { return stream << p.toString(); }
+
+#endif
