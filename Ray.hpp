@@ -1,9 +1,6 @@
 #ifndef __Ray__
 #define __Ray__
 
-#include <iostream>
-#include <cmath>
-#include <sstream>
 #include <limits>
 #include "Point3.hpp"
 #include "Vec3.hpp"
@@ -12,13 +9,12 @@
 class Ray {
 
 public: 
-
     Point3 origin;
     Vec3 direction;
     float tmin, tmax;
     int depth;
 
-    Ray(Point3 origin,  Vec3 direction, float tmin = 1e-5, float tmax = std::numeric_limits<float>::infinity(), int depth = 0) : 
+    Ray(Point3 origin, Vec3 direction, float tmin = 1e-5, float tmax = std::numeric_limits<float>::infinity(), int depth = 0) : 
     origin(origin), direction(direction), tmin(tmin), tmax(tmax), depth(depth) {}
 
     bool isClose(const Ray&other, float epsilon = 1e-5f) {
@@ -26,22 +22,15 @@ public:
                direction.isClose(other.direction, epsilon);
     }
 
-    Point3 at (float t) const{
+    Point3 at (float t) const {
         return origin + direction * t;
     }
 
-
-    Ray Transform(const Transformation& transformation) {
-
+    Ray transform(const Transformation& transformation) {
         return Ray(origin = transformation * origin,
-                direction = transformation * direction,
-                tmin,
-                tmax,
-                depth);
-
-
+                   direction = transformation * direction,
+                   tmin, tmax, depth);
     }
-
 };
 
 #endif
