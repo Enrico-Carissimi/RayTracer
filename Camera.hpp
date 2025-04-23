@@ -12,14 +12,14 @@
 using _CastRay = Ray(float u, float v, float d, float a);
 
 Ray _castOrthogonal(float u, float v, float d, float a) {
-    Point3 origin = Point3(-d, 1. - 2. * u * a, 2. * v - 1.);
+    Point3 origin = Point3(-d, (1. - 2. * u) * a, 2. * v - 1.);
     Vec3 direction(1., 0., 0.); // along x axis
     return Ray(origin, direction);
 }
 
 Ray _castPerspective(float u, float v, float d, float a){
     Point3 origin(-d, 0., 0.);
-    Vec3 direction(d, 1. - 2. * u * a, 2. * v - 1.);
+    Vec3 direction(d, (1. - 2. * u) * a, 2. * v - 1.);
     return Ray(origin, direction);
 }
 
@@ -65,7 +65,7 @@ public:
     // casts rays to every pixel of the image and computes their color using a renderer
     template <typename Function>
     void castAll(Function renderer) { // maybe rename to "render"?
-        for (int j = 0; j < imageWidth; j++) {
+        for (int j = 0; j < imageHeight; j++) {
             for (int i = 0; i < imageWidth; i++) {
                 Ray ray = castRay(i, j);
                 Color pixelColor = renderer(ray);
