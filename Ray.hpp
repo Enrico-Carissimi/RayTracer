@@ -26,10 +26,8 @@ public:
         return origin + direction * t;
     }
 
-    Ray transform(const Transformation& transformation) {
-        return Ray(origin = transformation * origin,
-                   direction = transformation * direction,
-                   tmin, tmax, depth);
+    Ray transform(const Transformation& transformation) const {
+        return Ray(transformation * origin, transformation * direction, tmin, tmax, depth);
     }
 };
 
