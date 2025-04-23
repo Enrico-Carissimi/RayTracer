@@ -80,6 +80,12 @@ public:
         matrixMult(matrix, inverseMatrix, result);
         return areCloseMatrix(IDENTITY4, result);
     }
+
+    bool isClose(const Transformation& other, float epsilon = 1e-5f) const {
+        return areCloseMatrix(this->matrix, other.matrix, epsilon) &&
+               areCloseMatrix(this->inverseMatrix, other.inverseMatrix, epsilon);
+    }
+    
 };
 
 
