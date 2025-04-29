@@ -122,18 +122,18 @@ Transformation rotation(float angle, Axis axis) {
         mat[5] = cos, mat[6] = -sin;
         mat[9] = sin, mat[10] = cos;
 
-        mat[0] = 1.;
-        mat[5] = cos, mat[6] = sin;
-        mat[9] = -sin, mat[10] = cos;
+        inv[0] = 1.;
+        inv[5] = cos, inv[6] = sin;
+        inv[9] = -sin, inv[10] = cos;
         break;
     case Axis::Y:
         mat[0] = cos, mat[2] = sin;
         mat[5] = 1.;
         mat[8] = -sin, mat[10] = cos;
 
-        mat[0] = cos, mat[2] = -sin;
-        mat[5] = 1.;
-        mat[8] = sin, mat[10] = cos;
+        inv[0] = cos, inv[2] = -sin;
+        inv[5] = 1.;
+        inv[8] = sin, inv[10] = cos;
         break;
     case Axis::Z:
         mat[0] = cos, mat[1] = -sin;
@@ -147,7 +147,7 @@ Transformation rotation(float angle, Axis axis) {
 
         return Transformation(mat, inv);
     }
-
+    
     return Transformation(mat, inv);
 }
 
