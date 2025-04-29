@@ -104,7 +104,7 @@ public:
     }
 
     // @brief saves the image as the format specified by the extension of fileName (pfm, png, jpeg)
-    void save(std::string fileName, float gamma) {
+    void save(std::string fileName, float gamma = 1.0f) {
         auto extension = std::filesystem::path(fileName).extension();
         if (extension == ".pfm") {writePFM(fileName); return;}
         if (extension == ".png") {writePNG(fileName, gamma); return;}
@@ -172,14 +172,14 @@ private:
         }
     }
 
-    void writePNG(std::string fileName, float gamma) {
+    void writePNG(std::string fileName, float gamma = 1.0f) {
         // to use stbi_write we need to convert string to char* and vector to pointer
         // 3 * width is the distance in bytes between the first byte of a row and
         // the first one of the next, 1 byte per uint8, 3 floats per color
         stbi_write_png(fileName.c_str(), _width, _height, 3, &pixelsToLDR(gamma)[0], 3 * _width);
     }
 
-    void writeJPG(std::string fileName, float gamma) {
+    void writeJPG(std::string fileName, float gamma = 1.0f) {
         // the last parameter is image quality, 100 is max
         stbi_write_jpg(fileName.c_str(), _width, _height, 3, &pixelsToLDR(gamma)[0], 100);
     }
