@@ -24,30 +24,17 @@ void test_at() {
 }
 
 void test_transform() {
-    // Crea il ray di esempio
+    
     Ray ray(Point3(1.0f, 2.0f, 3.0f), Vec3(6.0f, 5.0f, 4.0f));
     
-    // Applichiamo prima la rotazione
     Transformation rotationMatrix = rotation(90.0f, Axis::X);
 
-    // Applichiamo solo la rotazione, senza la traduzione, per il debug
     Ray rotated = ray.transform(rotationMatrix);
 
-    // Stampa il risultato della rotazione
-    std::cout << "Rotated origin: " << rotated.origin << std::endl;
-    std::cout << "Expected origin after 90° rotation around X: Point3(1.0f, -3.0f, 2.0f)" << std::endl;
-
-    // Ora applichiamo la traduzione
     Transformation translationMatrix = translation(Vec3(10.0f, 11.0f, 12.0f));
 
-    // Trasformiamo il ray con la rotazione e la traduzione
     Ray transformed = rotated.transform(translationMatrix);
-
-    // Stampa il risultato finale della trasformazione
-    std::cout << "Transformed origin after translation: " << transformed.origin << std::endl;
-    std::cout << "Expected Point3(11.0f, 8.0f, 14.0f)" << std::endl;
-
-    // Esegui le asserzioni per il test
+    
     assert(transformed.origin.isClose(Point3(11.0f, 8.0f, 14.0f), 1e-3f));
     assert(transformed.direction.isClose(Vec3(6.0f, -4.0f, 5.0f)));  // Trasformazione della direzione
 }
