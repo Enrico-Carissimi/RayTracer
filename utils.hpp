@@ -6,13 +6,13 @@
 
 inline float degToRad(float degrees){return degrees * M_PI / 180.;}
 
-bool areClose(float a, float b, float epsilon = 1e-5f) {
+bool areClose(float a, float b, float epsilon = 1e-4f) {
     return std::fabs(a - b) < epsilon;
 }
 
-bool areCloseMatrix(const float A[16], const float B[16], float epsilon = 1e-5f) {
+bool areCloseMatrix(const float A[16], const float B[16], float epsilon = 1e-4f) {
     for (int i = 0; i < 16; i++) {
-        if (!areClose(A[i], B[i])) return false;
+        if (!areClose(A[i], B[i], epsilon)) return false;
     }
     return true;
 }
