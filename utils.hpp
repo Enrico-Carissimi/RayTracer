@@ -6,7 +6,7 @@
 
 inline float degToRad(float degrees){return degrees * M_PI / 180.;}
 
-bool areClose(float a, float b, float epsilon = 1e-4f) {
+bool areClose(float a, float b, float epsilon = 1e-5f) {
     return std::fabs(a - b) < epsilon;
 }
 

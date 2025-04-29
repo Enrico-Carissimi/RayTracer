@@ -80,6 +80,14 @@ public:
         matrixMult(matrix, inverseMatrix, result);
         return areCloseMatrix(IDENTITY4, result);
     }
+    
+
+    bool isClose(const Transformation& other, float epsilon = 1e-5f) const {
+        return areCloseMatrix(this->matrix, other.matrix, epsilon) &&
+               areCloseMatrix(this->inverseMatrix, other.inverseMatrix, epsilon);
+    }
+    
+    
 };
 
 
@@ -117,37 +125,37 @@ Transformation rotation(float angle, Axis axis) {
     float cos = std::cos(theta), sin = std::sin(theta);
 
     switch (axis) {
-    case Axis::X:
-        mat[0] = 1.;
-        mat[5] = cos, mat[6] = -sin;
-        mat[9] = sin, mat[10] = cos;
-
-        inv[0] = 1.;
-        inv[5] = cos, inv[6] = sin;
-        inv[9] = -sin, inv[10] = cos;
-        break;
-    case Axis::Y:
-        mat[0] = cos, mat[2] = sin;
-        mat[5] = 1.;
-        mat[8] = -sin, mat[10] = cos;
-
-        inv[0] = cos, inv[2] = -sin;
-        inv[5] = 1.;
-        inv[8] = sin, inv[10] = cos;
-        break;
-    case Axis::Z:
-        mat[0] = cos, mat[1] = -sin;
-        mat[4] = sin, mat[5] = cos;
-        mat[10] = 1.;
-
-        inv[0] = cos, inv[1] = sin;
-        inv[4] = -sin, inv[5] = cos;
-        inv[10] = 1.;
-        break;
-
-        return Transformation(mat, inv);
-    }
-    
+        case Axis::X:
+            mat[0] = 1.;
+            mat[5] = cos, mat[6] = -sin;
+            mat[9] = sin, mat[10] = cos;
+        
+            inv[0] = 1.;
+            inv[5] = cos, inv[6] = sin;
+            inv[9] = -sin, inv[10] = cos;
+            break;
+        
+        case Axis::Y:
+            mat[0] = cos, mat[2] = sin;
+            mat[5] = 1.;
+            mat[8] = -sin, mat[10] = cos;
+        
+            inv[0] = cos, inv[2] = -sin;
+            inv[5] = 1.;
+            inv[8] = sin, inv[10] = cos;
+            break;
+        
+        case Axis::Z:
+            mat[0] = cos, mat[1] = -sin;
+            mat[4] = sin, mat[5] = cos;
+            mat[10] = 1.;
+        
+            inv[0] = cos, inv[1] = sin;
+            inv[4] = -sin, inv[5] = cos;
+            inv[10] = 1.;
+            break;
+        }
+        
     return Transformation(mat, inv);
 }
 

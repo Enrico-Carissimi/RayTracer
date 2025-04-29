@@ -33,6 +33,12 @@ struct Point3 {
         return Vec3(x - other.x, y - other.y, z - other.z);
     }
 
+    // Scalar multiplication
+    inline Point3 operator*(float scalar) const {
+    return Point3(x * scalar, y * scalar, z * scalar);
+    }
+
+
     // Conversion to Vec3
     inline Vec3 toVec() const { return Vec3(x, y, z); }
 
