@@ -124,7 +124,6 @@ Transformation rotation(float angle, Axis axis) {
     float theta = degToRad(angle);
     float cos = std::cos(theta), sin = std::sin(theta);
 
-
     switch (axis) {
         case Axis::X:
             mat[0] = 1.;

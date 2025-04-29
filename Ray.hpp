@@ -1,0 +1,34 @@
+#ifndef __Ray__
+#define __Ray__
+
+#include <limits>
+#include "Point3.hpp"
+#include "Vec3.hpp"
+#include "Transformation.hpp"
+
+class Ray {
+
+public: 
+    Point3 origin;
+    Vec3 direction;
+    float tmin, tmax;
+    int depth;
+
+    Ray(Point3 origin, Vec3 direction, float tmin = 1e-5, float tmax = std::numeric_limits<float>::infinity(), int depth = 0) : 
+    origin(origin), direction(direction), tmin(tmin), tmax(tmax), depth(depth) {}
+
+    bool isClose(const Ray&other, float epsilon = 1e-5f) {
+        return origin.isClose(other.origin, epsilon) &&
+               direction.isClose(other.direction, epsilon);
+    }
+
+    Point3 at (float t) const {
+        return origin + direction * t;
+    }
+
+    Ray transform(const Transformation& transformation) const {
+        return Ray(transformation * origin, transformation * direction, tmin, tmax, depth);
+    }
+};
+
+#endif
