@@ -1,11 +1,11 @@
 #include <cassert>
 #include <iostream>
 #include <cmath>
-#include "Ray.hpp"
-#include "Point3.hpp"
-#include "Vec3.hpp"
+#include "../Ray.hpp"
+#include "../Point3.hpp"
+#include "../Vec3.hpp"
 
-void test_is_close() {
+void testIsClose() {
     
     Ray ray1(Point3(1.0f, 2.0f, 3.0f), Vec3(5.0f, 4.0f, -1.0f));
     Ray ray2(Point3(1.0f, 2.0f, 3.0f), Vec3(5.0f, 4.0f, -1.0f));
@@ -15,7 +15,7 @@ void test_is_close() {
     assert(!(ray1.isClose(ray3))); // Ray1 should NOT be close to Ray3
 }
 
-void test_at() {
+void testAt() {
     Ray ray(Point3(1.0f, 2.0f, 4.0f), Vec3(4.0f, 2.0f, 1.0f));
 
     assert(ray.at(0.0f).isClose(ray.origin));  // At t=0, it should be the same as the origin
@@ -23,7 +23,7 @@ void test_at() {
     assert(ray.at(2.0f).isClose(Point3(9.0f, 6.0f, 6.0f)));  // Point at t=2
 }
 
-void test_transform() {
+void testTransform() {
     
     Ray ray(Point3(1.0f, 2.0f, 3.0f), Vec3(6.0f, 5.0f, 4.0f));
     
@@ -43,9 +43,9 @@ void test_transform() {
 
 int main() {
 
-    test_is_close();
-    test_at();
-    test_transform();
+    testIsClose();
+    testAt();
+    testTransform();
 
     std::cout << "All tests passed!" << std::endl;
     return 0;

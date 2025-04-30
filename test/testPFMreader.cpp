@@ -73,8 +73,8 @@ void testReadFile(std::string name) {
 void testWritePMF() {
     auto stream = streamFromArray(LE_REFERENCE_BYTES, 84);
     HDRImage image(stream);
-    image.save("test/test.pfm");
-    testReadFile("test/test.pfm");
+    image.save("../RayTracer/test/test.pfm");
+    testReadFile("../RayTracer/test/test.pfm");
 }
 
 bool isClose(float a, float b) {
@@ -135,10 +135,10 @@ int main(){
     testException(ss, [](std::istringstream& s) -> auto {return HDRImage(s);});
     cout << "readPFM works" << endl;
 
-    testReadFile("test/reference_le.pfm");
-    testReadFile("test/reference_be.pfm");
-    HDRImage image("test/memorial.pfm");
-    testException("test/iDoNotExist.psd", testReadFile);
+    testReadFile("../RayTracer/test/reference_le.pfm");
+    testReadFile("../RayTracer/test/reference_be.pfm");
+    HDRImage image("../RayTracer/test/memorial.pfm");
+    testException("../RayTracer/test/iDoNotExist.psd", testReadFile);
     cout << "readPFM from file works" << endl;
 
     // test writePFM
@@ -150,9 +150,9 @@ int main(){
     image = HDRImage(stream);
     image.normalize(1., image.averageLuminosity());
     image.clamp();
-    image.save("test/test.png");
-    image.save("test/test.jpeg");
-    testException("test/test.gif", [&image](std::string s) -> auto {return image.save(s);});
+    image.save("../RayTracer/test/test.png");
+    image.save("../RayTracer/test/test.jpeg");
+    testException("../RayTracer/test/test.gif", [&image](std::string s) -> auto {return image.save(s);});
     cout << "there should be \"test.*\" files containing 6 pixels: g, w, r / y, m, k" << endl;
 
 

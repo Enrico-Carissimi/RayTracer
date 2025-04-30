@@ -1,6 +1,6 @@
 #include <cassert>
 #include <iostream>
-#include "Color.hpp"  
+#include "../Color.hpp"  
 
 int main() {
     Color color(1.0f, 2.0f, 3.0f);
