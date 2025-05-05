@@ -4,7 +4,9 @@
 #include <cmath>
 #include <string>
 
-inline float degToRad(float degrees){return degrees * M_PI / 180.;}
+#define PI 3.1415926535897932385
+
+inline float degToRad(float degrees){return degrees * PI / 180.;}
 
 bool areClose(float a, float b, float epsilon = 1e-5f) {
     return std::fabs(a - b) < epsilon;
