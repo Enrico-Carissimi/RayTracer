@@ -40,7 +40,7 @@ public:
         }
     }
 
-    inline Transformation inverse() {
+    inline Transformation inverse() const {
         return Transformation(inverseMatrix, matrix);
     }
 
