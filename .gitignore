@@ -38,3 +38,7 @@
 *.png
 *.jpg
 *.jpeg
+test/test.pfm
+
+# Build folder
+build/*
