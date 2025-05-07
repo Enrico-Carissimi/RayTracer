@@ -10,7 +10,7 @@ Camera setup() { return Camera("perspective", aspectRatio, 4); }
 
 void testOrientation() {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    
+
     Camera camera = setup();
     
     Ray topLeftRay = camera.castRay(0, 0, 0., 0.);
@@ -23,7 +23,7 @@ void testOrientation() {
 }
 
 int main() {
-    testOrientation();
+    testOrientationnn();
 
     return 0;
 }
