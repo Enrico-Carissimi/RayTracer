@@ -23,7 +23,9 @@ void testOrientation() {
 }
 
 int main() {
-    testOrientationnn();
+    testOrientation();
+
+    assert(0 == 1);
 
     return 0;
 }
