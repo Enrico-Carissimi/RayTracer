@@ -27,6 +27,11 @@ public:
     virtual ~Shape() = default;
 
     virtual bool isHit(const Ray& r, HitRecord& rec) const = 0;
+
+    virtual bool quickIsHit(const Ray& r) const {
+        HitRecord dummy;
+        return isHit(r, dummy);
+    }
 };
 
 class Sphere : public Shape {
