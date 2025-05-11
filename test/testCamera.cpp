@@ -79,5 +79,10 @@ int main() {
 
 
 
+    // fail to test ci build
+    assert(1 == 0);
+
+
+
     return 0;
 }
