@@ -1,4 +1,4 @@
-#ifndef __Vec2_
+#ifndef __Vec2__
 #define __Vec2__
 
 #include <cmath>
