@@ -68,7 +68,7 @@ public:
         rec.t = t;
         rec.ray = r;
         rec.worldPoint = transformation * localHit;  
-        rec.normal = transformation * sphereNormal(localHit, r.direction);  
+        rec.normal = transformation * sphereNormal(localHit, invRay.direction);  
         rec.surfacePoint = sphereUV(localHit); 
     
         return true;
