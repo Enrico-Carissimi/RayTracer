@@ -76,35 +76,41 @@ public:
 };
 
 class Plane : public Shape {
-public: 
-    Plane(const Transformation& t = Transformation()) : Shape(t) {}
+public:
+    Plane(const Transformation& t = Transformation())
+        : Shape(t) {}
 
-    bool isHit(const Ray& r, HitRecord& rec) const override {
-        
-        Ray localRay = r.transform(transformation.inverse());
-    
-        if (std::abs(localRay.direction.z) < 1e-6f) {
+    bool isHit(const Ray& ray, HitRecord& rec) const override {
+        Ray invRay = ray.transform(transformation.inverse());
+
+        if (std::abs(invRay.direction.z) < 1e-5f)
             return false;
-        }
-    
-        float t = -localRay.origin.z / localRay.direction.z;
-        if (t < localRay.tmin || t > localRay.tmax) {
+
+        float t = -invRay.origin.z / invRay.direction.z;
+
+        if (t <= invRay.tmin || t >= invRay.tmax)
             return false;
-        }
-    
-        Point3 localHit = localRay.at(t);
-        Vec3 localNormal(0, 0, 1);
-    
+
+        Point3 hitPoint = invRay.at(t);
+
+        rec.worldPoint = transformation * hitPoint;
+        rec.normal = transformation * Normal3(0.0f, 0.0f, invRay.direction.z < 0.0f ? 1.0f : -1.0f);
+        rec.surfacePoint = Vec2(hitPoint.x - std::floor(hitPoint.x), hitPoint.y - std::floor(hitPoint.y));
         rec.t = t;
-        rec.ray = r;
-        rec.worldPoint = transformation * localHit;
-        rec.normal = transformation * Normal3(localNormal);
-        rec.surfacePoint = Vec2(localHit.x * 0.5f + 0.5f, localHit.y * 0.5f + 0.5f);
-    
+        rec.ray = ray;
+
         return true;
     }
-    
 
+    bool quickIsHit(const Ray& ray) const override {
+        Ray invRay = ray.transform(transformation.inverse());
+
+        if (std::abs(invRay.direction.z) < 1e-5f)
+            return false;
+
+        float t = -invRay.origin.z / invRay.direction.z;
+        return t > invRay.tmin && t < invRay.tmax;
+    }
 };
 
 #endif
