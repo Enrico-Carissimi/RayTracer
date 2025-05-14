@@ -4,7 +4,7 @@
 #include "Ray.hpp"
 #include "HitRecord.hpp"
 #include "Transformation.hpp"
-#include <cmath>
+#include "utils.hpp"
 
 // Helper to compute normal of a unit sphere
 inline Normal3 sphereNormal(const Point3& point, const Vec3& rayDir) {
@@ -14,8 +14,9 @@ inline Normal3 sphereNormal(const Point3& point, const Vec3& rayDir) {
 
 // Helper to compute texture coordinates on unit sphere
 inline Vec2 sphereUV(const Point3& point) {
-    float u = std::atan2(point.y, point.x) / (2.0f * M_PI);
-    float v = std::acos(point.z) / M_PI;
+    float u = std::atan2(point.y, point.x) / (2.0f * PI);
+    u += (u < 0.); // if (u < 0.) u += 1;
+    float v = std::acos(point.z) / PI;
     return Vec2(u, v);
 }
 
@@ -68,7 +69,7 @@ public:
         rec.t = t;
         rec.ray = r;
         rec.worldPoint = transformation * localHit;  
-        rec.normal = transformation * sphereNormal(localHit, r.direction);  
+        rec.normal = transformation * sphereNormal(localHit, invRay.direction);  
         rec.surfacePoint = sphereUV(localHit); 
     
         return true;

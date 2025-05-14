@@ -24,7 +24,7 @@ struct HitRecord {
         return worldPoint.isClose(other.worldPoint, epsilon) &&
                normal.isClose(other.normal, epsilon) &&
                surfacePoint.isClose(other.surfacePoint, epsilon) &&
-               areClose((t - other.t), epsilon) &&
+               areClose(t, other.t, epsilon) &&
                ray.isClose(other.ray, epsilon);
     }
     
