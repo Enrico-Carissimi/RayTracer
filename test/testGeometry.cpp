@@ -1,4 +1,3 @@
-#include <cassert>
 #include <iostream>
 #include "../Vec3.hpp" 
 #include "../Point3.hpp"  
@@ -11,18 +10,18 @@ void testVec3operations() {
     Vec3 a = Vec3(1.0, 2.0, 3.0);
     Vec3 b = Vec3(4.0, 6.0, 8.0);
 
-    assert (a.isClose(a));
-    assert (!a.isClose(b));
+    sassert(a.isClose(a));
+    sassert(!a.isClose(b));
 
-    assert((-a).isClose(Vec3(-1.0, -2.0, -3.0)));
-    assert((a + b).isClose(Vec3(5.0, 8.0, 11.0)));
-    assert((b - a).isClose(Vec3(3.0, 4.0, 5.0)));
-    assert((a * 2).isClose(Vec3(2.0, 4.0, 6.0)));
-    assert(fabs(dot(a, b) - 40.0f) < 1e-5);
-    assert(cross(a, b).isClose(Vec3(-2.0, 4.0, -2.0))); 
-    assert(cross(b, a).isClose(Vec3(2.0, -4.0, 2.0))); 
-    assert(fabs(a.norm2() - 14.0f) < 1e-5);
-    assert(fabs(a.norm() * a.norm() - 14.0f) < 1e-5);
+    sassert((-a).isClose(Vec3(-1.0, -2.0, -3.0)));
+    sassert((a + b).isClose(Vec3(5.0, 8.0, 11.0)));
+    sassert((b - a).isClose(Vec3(3.0, 4.0, 5.0)));
+    sassert((a * 2).isClose(Vec3(2.0, 4.0, 6.0)));
+    sassert(fabs(dot(a, b) - 40.0f) < 1e-5);
+    sassert(cross(a, b).isClose(Vec3(-2.0, 4.0, -2.0))); 
+    sassert(cross(b, a).isClose(Vec3(2.0, -4.0, 2.0))); 
+    sassert(fabs(a.norm2() - 14.0f) < 1e-5);
+    sassert(fabs(a.norm() * a.norm() - 14.0f) < 1e-5);
 
 }
 
@@ -33,13 +32,13 @@ void testPoint3operations() {
     Vec3 v(4.0, 6.0, 8.0);
     Point3 p2(4.0, 6.0, 8.0);
 
-    assert(p1.isClose(p1));
-    assert(!p1.isClose(p2));
+    sassert(p1.isClose(p1));
+    sassert(!p1.isClose(p2));
 
-    assert((p1 * 2).isClose(Point3(2.0, 4.0, 6.0)));
-    assert((p1 + v).isClose(Point3(5.0, 8.0, 11.0)));  
-    assert((p2 - p1).isClose(Vec3(3.0, 4.0, 5.0)));  
-    assert((p1 - v).isClose(Point3(-3.0, -4.0, -5.0)));  
+    sassert((p1 * 2).isClose(Point3(2.0, 4.0, 6.0)));
+    sassert((p1 + v).isClose(Point3(5.0, 8.0, 11.0)));  
+    sassert((p2 - p1).isClose(Vec3(3.0, 4.0, 5.0)));  
+    sassert((p1 - v).isClose(Point3(-3.0, -4.0, -5.0)));  
 
 }
 
@@ -61,19 +60,19 @@ void testTrasformation() {
     };
 
     Transformation m1(mat, inv);
-    assert(m1.isConsistent());
+    sassert(m1.isConsistent());
 
     Transformation m2(mat, inv);
-    assert(areCloseMatrix(m1.matrix, m2.matrix));
-    assert(areCloseMatrix(m1.inverseMatrix, m2.inverseMatrix));           
+    sassert(areCloseMatrix(m1.matrix, m2.matrix));
+    sassert(areCloseMatrix(m1.inverseMatrix, m2.inverseMatrix));           
 
     Transformation m3(mat, inv);
     m3.matrix[10] += 1.0f; 
-    assert(!m1.isClose(m3));
+    sassert(!m1.isClose(m3));
 
     Transformation m4(mat, inv);
     m4.inverseMatrix[10] += 1.0f;
-    assert(!m1.isClose(m4));
+    sassert(!m1.isClose(m4));
 
 }
 
@@ -94,7 +93,7 @@ void testTransformationMultiplication() {
     };
     
     Transformation m1(m1_matrix, m1_invm);
-    assert(m1.isConsistent());
+    sassert(m1.isConsistent());
 
     float m2_matrix[16] = {
         3.0, 5.0, 2.0, 4.0,
@@ -111,7 +110,7 @@ void testTransformationMultiplication() {
     };
     
     Transformation m2(m2_matrix, m2_invm);
-    assert(m2.isConsistent());
+    sassert(m2.isConsistent());
 
     float expected_matrix[16] = {
         33.0, 32.0, 16.0, 18.0,
@@ -128,10 +127,10 @@ void testTransformationMultiplication() {
     };
 
     Transformation expected(expected_matrix, expected_invm);
-    assert(expected.isConsistent()); 
+    sassert(expected.isConsistent()); 
 
-    assert(areCloseMatrix(expected.matrix, (m1 * m2).matrix));
-    assert(areCloseMatrix(expected.inverseMatrix, (m1 * m2).inverseMatrix));
+    sassert(areCloseMatrix(expected.matrix, (m1 * m2).matrix));
+    sassert(areCloseMatrix(expected.inverseMatrix, (m1 * m2).inverseMatrix));
 }
 
 
@@ -152,16 +151,16 @@ void testVecPointMultiplication() {
     };
         
     Transformation m(m_matrix, m_invm);
-    assert(m.isConsistent());
+    sassert(m.isConsistent());
     
     Vec3 expected_v(14.0, 38.0, 51.0);
-    assert(expected_v.isClose(m * Vec3(1.0, 2.0, 3.0)));
+    sassert(expected_v.isClose(m * Vec3(1.0, 2.0, 3.0)));
     
     Point3 expected_p(18.0, 46.0, 58.0);
-    assert(expected_p.isClose(m * Point3(1.0, 2.0, 3.0)));
+    sassert(expected_p.isClose(m * Point3(1.0, 2.0, 3.0)));
     
     Normal3 expected_n(-8.75, 7.75, -3.0);
-    assert(expected_n.isClose(m * Normal3(3.0, 2.0, 4.0)));
+    sassert(expected_n.isClose(m * Normal3(3.0, 2.0, 4.0)));
 }
 
 void testTransformationInverse() {
@@ -181,29 +180,29 @@ void testTransformationInverse() {
     };
     
     Transformation m1(m_matrix, m_invm);
-    assert(m1.isConsistent());
+    sassert(m1.isConsistent());
 
     Transformation m2 = m1.inverse();
-    assert(m2.isConsistent());
+    sassert(m2.isConsistent());
 
     Transformation prod = m1 * m2;
-    assert(prod.isConsistent());
-    assert(prod.isClose(Transformation()));
+    sassert(prod.isConsistent());
+    sassert(prod.isClose(Transformation()));
 }
 
 void testTranslation() {
 
     Transformation tr1 = translation(Vec3(1.0, 2.0, 3.0));
-    assert(tr1.isConsistent());
+    sassert(tr1.isConsistent());
 
     Transformation tr2 = translation(Vec3(4.0, 6.0, 8.0));
-    assert(tr2.isConsistent());
+    sassert(tr2.isConsistent());
 
     Transformation prod = tr1 * tr2;
-    assert(prod.isConsistent());
+    sassert(prod.isConsistent());
 
     Transformation expected = translation(Vec3(5.0, 8.0, 11.0));
-    assert(prod.isClose(expected));
+    sassert(prod.isClose(expected));
 }
 
 void testRotation() {
@@ -212,28 +211,28 @@ void testRotation() {
     const Vec3 vecY(0.0, 1.0, 0.0);
     const Vec3 vecZ(0.0, 0.0, 1.0);
 
-    assert(rotation(0.1, Axis::X).isConsistent()); 
-    assert(rotation(0.1, Axis::Y).isConsistent());  
-    assert(rotation(0.1, Axis::Z).isConsistent());  
+    sassert(rotation(0.1, Axis::X).isConsistent()); 
+    sassert(rotation(0.1, Axis::Y).isConsistent());  
+    sassert(rotation(0.1, Axis::Z).isConsistent());  
     
     // Rotation tests of some specific rotations
-    assert((rotation(90, Axis::X) * vecY).isClose(vecZ));  // 90° rotation around the X-axis
-    assert((rotation(90, Axis::Y) * vecZ).isClose(vecX));  // 90° rotation around the Y-axis
-    assert((rotation(90, Axis::Z) * vecX).isClose(vecY));  // 90° rotation around the Z-axis
+    sassert((rotation(90, Axis::X) * vecY).isClose(vecZ));  // 90° rotation around the X-axis
+    sassert((rotation(90, Axis::Y) * vecZ).isClose(vecX));  // 90° rotation around the Y-axis
+    sassert((rotation(90, Axis::Z) * vecX).isClose(vecY));  // 90° rotation around the Z-axis
     
 }
 
 void testScaling() {
     
     Transformation tr1 = scaling(Vec3(2.0, 5.0, 10.0));
-    assert(tr1.isConsistent());
+    sassert(tr1.isConsistent());
 
     Transformation tr2 = scaling(Vec3(3.0, 2.0, 4.0));
-    assert(tr2.isConsistent());
+    sassert(tr2.isConsistent());
 
     Transformation expected = scaling(Vec3(6.0, 10.0, 40.0));
     
-    assert(expected.isClose(tr1 * tr2));
+    sassert(expected.isClose(tr1 * tr2));
 }
 
 
