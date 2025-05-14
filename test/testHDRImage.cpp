@@ -56,7 +56,5 @@ int main() {
     
     std::cout << "all tests passed" << std::endl;
 
-    sassert(1 == 0);
-
     return 0;
 }
