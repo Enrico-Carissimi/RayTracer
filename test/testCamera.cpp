@@ -64,7 +64,7 @@ void testCastRay() {
 
     Ray ray1 = camera.castRay(0, 0, 2.5, 1.5);
     Ray ray2 = camera.castRay(2, 1, 0.5, 0.5);
-    assert(ray1.isClose(ray2));
+    sassert(ray1.isClose(ray2));
 
     std::cout << "castRay works" << std::endl;
 }
@@ -73,10 +73,10 @@ void testOrientation() {
     Camera camera = setup();
     
     Ray topLeftRay = camera.castRay(0, 0, 0., 0.);
-    assert(Point3(0., 2., 1.).isClose(topLeftRay.at(1.)));
+    sassert(Point3(0., 2., 1.).isClose(topLeftRay.at(1.)));
 
     Ray bottomRightRay = camera.castRay(3, 1, 1., 1.);
-    assert(Point3(0., -2., -1.).isClose(bottomRightRay.at(1.)));
+    sassert(Point3(0., -2., -1.).isClose(bottomRightRay.at(1.)));
 
     std::cout << "the image is oriented correctly" << std::endl;
 }
