@@ -65,8 +65,10 @@ int main() {
     // ----------------------
     // (Optional test that must fail if uncommented)
     // ----------------------
-    assert(color.isClose(Color(9.0f, 9.0f, 9.0f)));  // MUST FAIL
-    std::cout << "Test that must fail passed" << std::endl;
+    // assert(color.isClose(Color(9.0f, 9.0f, 9.0f)));  // MUST FAIL
+    // std::cout << "Test that must fail passed" << std::endl;
+
+    exit(1);
 
     return 0;
 }
