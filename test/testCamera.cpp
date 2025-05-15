@@ -5,11 +5,10 @@
 // instead of Camera::castRay since the latter uses integer image coordinates
 // this is different from prof. Tomasi's implementation
 
-int main() {
-    float aspectRatio = 2.;
-    float distance = 1.;
+const float aspectRatio = 2.;
+const float distance = 1.;
 
-// orthogonal projection
+void testCastOrthogonal() {
     Ray ray1 = _castOrthogonal(0., 0., distance, aspectRatio);
     Ray ray2 = _castOrthogonal(1., 0., distance, aspectRatio);
     Ray ray3 = _castOrthogonal(0., 1., distance, aspectRatio);
@@ -27,14 +26,13 @@ int main() {
     sassert(ray4.at(1.).isClose(Point3(0., -2., 1.)));
 
     std::cout << "orthogonal projection works" << std::endl;
+}
 
-
-
-// perspective projection
-    ray1 = _castPerspective(0., 0., distance, aspectRatio);
-    ray2 = _castPerspective(1., 0., distance, aspectRatio);
-    ray3 = _castPerspective(0., 1., distance, aspectRatio);
-    ray4 = _castPerspective(1., 1., distance, aspectRatio);
+void testCastPerspective() {
+    Ray ray1 = _castPerspective(0., 0., distance, aspectRatio);
+    Ray ray2 = _castPerspective(1., 0., distance, aspectRatio);
+    Ray ray3 = _castPerspective(0., 1., distance, aspectRatio);
+    Ray ray4 = _castPerspective(1., 1., distance, aspectRatio);
 
     // verify that all the rays depart from the same point
     sassert(ray1.origin.isClose(ray2.origin));
@@ -48,24 +46,43 @@ int main() {
     sassert(ray4.at(1.).isClose(Point3(0., -2., 1.)));
 
     std::cout << "perspective projection works" << std::endl;
+}
 
-
-// transform camera (adapted, same as above)
+// adapted, same as above
+void testTransformCamera() {
     Camera camera("orthogonal", aspectRatio, 200, 1., translation(-Vec3(0., 1., 0.) * 2.) * rotation(90, Axis::Z));
-    Ray ray = camera.castRay(100, 50, -0.5, -0.5); // will need to be changed to (100, 50, 0., 0.) when we fix the (intended) error in Camera
+    Ray ray = camera.castRay(100, 50, 0., 0.);
     sassert(ray.at(1.).isClose(Point3(0., -2., 0.)));
 
     std::cout << "transform works" << std::endl;
+}
 
+Camera setup() { return Camera("perspective", aspectRatio, 4); }
 
+void testCastRay() {
+    Camera camera = setup();
 
-// "ImageTracer" or castAll
-    camera = Camera("perspective", aspectRatio, 4);
-
-    ray1 = camera.castRay(0, 0, 2.5, 1.5);
-    ray2 = camera.castRay(2, 1, 0.5, 0.5);
+    Ray ray1 = camera.castRay(0, 0, 2.5, 1.5);
+    Ray ray2 = camera.castRay(2, 1, 0.5, 0.5);
     sassert(ray1.isClose(ray2));
 
+    std::cout << "castRay works" << std::endl;
+}
+
+void testOrientation() {
+    Camera camera = setup();
+    
+    Ray topLeftRay = camera.castRay(0, 0, 0., 0.);
+    sassert(Point3(0., 2., 1.).isClose(topLeftRay.at(1.)));
+
+    Ray bottomRightRay = camera.castRay(3, 1, 1., 1.);
+    sassert(Point3(0., -2., -1.).isClose(bottomRightRay.at(1.)));
+
+    std::cout << "the image is oriented correctly" << std::endl;
+}
+
+void testCoverage() {
+    Camera camera = setup();
     camera.castAll([](Ray){ return Color(1., 2., 3.); });
 
     for (int row = 0; row < camera.imageHeight; row++) {
@@ -74,7 +91,21 @@ int main() {
         }
     }
 
-    std::cout << "castAll works" << std::endl;
+    std::cout << "the image is filled correctly" << std::endl;
+}
+
+
+
+int main() {
+    // projections
+    testCastOrthogonal();
+    testCastPerspective();
+
+    // camera
+    testTransformCamera();
+    testCastRay();
+    testOrientation();
+    testCoverage();
 
     return 0;
 }
