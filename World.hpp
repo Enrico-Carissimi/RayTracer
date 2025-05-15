@@ -11,13 +11,13 @@
 
 class World {
 public:
-    std::vector<std::shared_ptr<Shape>> shapes;
+    
     //std::vector<PointLight> pointLights;         // Lista di luci
 
     World() = default;
 
     void addShape(std::shared_ptr<Shape> shape) {
-        shapes.push_back(shape);
+        _shapes.push_back(shape);
     }
 
     // Metodo per aggiungere una luce al mondo
@@ -25,23 +25,26 @@ public:
         //point_lights.push_back(light);
     //}
 
-    std::shared_ptr<HitRecord> rayIntersection(const Ray& ray) {
-        std::shared_ptr<HitRecord> closest = nullptr;
+    bool isHit(const Ray& ray, HitRecord& rec) {
+        bool hit = false;
+        float closest = ray.tmax;
     
-        for (const auto& shape : shapes) {
+        for (const auto& shape : _shapes) {
             HitRecord tempRecord;
             if (shape->isHit(ray, tempRecord)) {
-                if (!closest || tempRecord.t < closest->t) {
-                    closest = std::make_shared<HitRecord>(tempRecord);
+                if (!hit || tempRecord.t < closest) { // if the ray is not const, we could avoid this if by doing ray.tmax = closest
+                    hit = true;
+                    closest = tempRecord.t;
+                    rec = tempRecord;
                 }
             }
         }
     
-        if (closest) {
-            closest->normal = closest->normal.normalize();
+        if (hit) {
+            rec.normal = rec.normal.normalize();
         }
     
-        return closest;
+        return hit;
     }
     
     
@@ -50,7 +53,7 @@ public:
         float dirNorm = direction.norm();
 
         Ray ray(observerPos, direction, 1e-2f / dirNorm, 1.0f);
-        for (const auto& shape : shapes) {
+        for (const auto& shape : _shapes) {
             if (shape->quickIsHit(ray)) {
                 return false;
             }
@@ -58,6 +61,9 @@ public:
 
         return true;
     }
+
+private:
+    std::vector<std::shared_ptr<Shape>> _shapes;
 };
 
 #endif
