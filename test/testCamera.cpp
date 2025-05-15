@@ -51,7 +51,7 @@ void testCastPerspective() {
 // adapted, same as above
 void testTransformCamera() {
     Camera camera("orthogonal", aspectRatio, 200, 1., translation(-Vec3(0., 1., 0.) * 2.) * rotation(90, Axis::Z));
-    Ray ray = camera.castRay(100, 50, -0.5, -0.5); // will need to be changed to (100, 50, 0., 0.) when we fix the (intended) error in Camera
+    Ray ray = camera.castRay(100, 50, 0., 0.);
     sassert(ray.at(1.).isClose(Point3(0., -2., 0.)));
 
     std::cout << "transform works" << std::endl;
