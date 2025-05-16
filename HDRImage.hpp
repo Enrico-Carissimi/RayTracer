@@ -144,15 +144,15 @@ private:
     //@brief converts the pixels to 1 byte ints from 0 to 255;
     //@brief the HDR pixels must be normalized before calling this function
     std::vector<uint8_t> pixelsToLDR(float gamma = 1.0f) {
-        std::vector<uint8_t> data;
-        data.reserve(3 * _width * _height); // reserve memory but don't initialize it, so we can use push_back
-        for (Color& color : _pixels) {
-            data.emplace_back(255 * std::pow(color.r, gamma));
-            data.emplace_back(255 * std::pow(color.g, gamma));
-            data.emplace_back(255 * std::pow(color.b, gamma));
+        int length = _width * _height;
+        std::vector<uint8_t> data(3 * length);
+        for (int i = 0; i < length; i++) {
+            data[3 * i] = (255 * std::pow(_pixels[i].r, gamma));
+            data[3 * i + 1] = (255 * std::pow(_pixels[i].g, gamma));
+            data[3 * i + 2] = (255 * std::pow(_pixels[i].b, gamma));
         }
 
-        return data; // I think this moves the vector without copying it automatically?
+        return data;
     }
 
     void writePFM(std::string fileName) {

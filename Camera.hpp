@@ -17,7 +17,7 @@ Ray _castOrthogonal(float u, float v, float d, float a) {
     return Ray(origin, direction);
 }
 
-Ray _castPerspective(float u, float v, float d, float a){
+Ray _castPerspective(float u, float v, float d, float a) {
     Point3 origin(-d, 0., 0.);
     Vec3 direction(d, (1. - 2. * u) * a, 2. * v - 1.);
     return Ray(origin, direction);
@@ -57,8 +57,8 @@ public:
     // (uPixel, vPixel) is the position inside the pixel, (0.5, 0.5) is the centre
     // the top-left corner is (1, 0), bottom right is (0, 1)
     inline Ray castRay(int i, int j, float uPixel = 0.5, float vPixel = 0.5) const {
-        float u = ((float)i + uPixel) / (imageWidth - 1); // !!! there is an error here
-        float v = ((float)j + vPixel) / (imageHeight - 1);
+        float u = ((float)i + uPixel) / imageWidth;
+        float v = 1 - ((float)j + vPixel) / imageHeight;
         return _castRay(u, v, _distance, aspectRatio).transform(transformation); // maybe not the best way to do this
     }
 

@@ -4,7 +4,7 @@ project(RayTracer VERSION 0.1.0)
 
 # specify the C++ standard
 add_library(compilerFlags INTERFACE)
-target_compile_features(compilerFlags INTERFACE cxx_std_17)
+target_compile_features(compilerFlags INTERFACE cxx_std_20)
 
 # add the executable
 add_executable(RayTracer main.cpp)

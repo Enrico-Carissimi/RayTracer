@@ -1,6 +1,6 @@
 #include <iostream>
-#include <cassert>
 #include "../HDRImage.hpp"
+#include "../utils.hpp"
 
 using std::cout, std::endl;
 
@@ -12,46 +12,46 @@ int main() {
     HDRImage image(400, 300);
 
     // check the borders
-    assert(image.validCoordinates(0, 299));
-    assert(image.validCoordinates(399, 0));
+    sassert(image.validCoordinates(0, 299));
+    sassert(image.validCoordinates(399, 0));
 
     // check for negative coords
-    assert(!image.validCoordinates(-1, 9));
-    assert(!image.validCoordinates(1, -9));
+    sassert(!image.validCoordinates(-1, 9));
+    sassert(!image.validCoordinates(1, -9));
 
     // check for out of bounds coords
-    assert(!image.validCoordinates(1080, 720));
+    sassert(!image.validCoordinates(1080, 720));
 
     // check index calculations
-    assert(image.pixelIndex(1, 2) == 801);
-    assert(image.pixelIndex(11, 203) == 11 + 203 * 400);
+    sassert(image.pixelIndex(1, 2) == 801);
+    sassert(image.pixelIndex(11, 203) == 11 + 203 * 400);
 
     // set and get fail automatically
     image.setPixel(0, 0, Color(1., 1., 1.)); // correct
     bool exceptionThrown = false;
     try{image.getPixel(-2, 0);} // illegal, should get error message
     catch(std::exception& e){exceptionThrown = true;}
-    assert(exceptionThrown);
+    sassert(exceptionThrown);
 
     // check average luminosity
     image = HDRImage(2, 1); // reset to black
     float a = image.averageLuminosity(); // check the program doesn't crash when all pixels are 0
     image.setPixel(0, 0, Color(5., 10., 15.));
     image.setPixel(1, 0, Color(500., 1000., 1500.));
-    assert(isClose(image.averageLuminosity(0.), 100.));
+    sassert(isClose(image.averageLuminosity(0.), 100.));
 
     // test normalization
     image.normalize(1000., 100.);
-    assert(image.getPixel(0, 0).isClose(Color(0.5e2, 1.0e2, 1.5e2)));
-    assert(image.getPixel(1, 0).isClose(Color(0.5e4, 1.0e4, 1.5e4)));
+    sassert(image.getPixel(0, 0).isClose(Color(0.5e2, 1.0e2, 1.5e2)));
+    sassert(image.getPixel(1, 0).isClose(Color(0.5e4, 1.0e4, 1.5e4)));
 
     // test clamp
     image.clamp();
     for (int i = 0; i < 2; i++) { // check that the rgb values are within the expected boundaries
         auto pixel = image.getPixel(i, 0);
-        assert((pixel.r >= 0) && (pixel.r <= 1));
-        assert((pixel.g >= 0) && (pixel.g <= 1));
-        assert((pixel.b >= 0) && (pixel.b <= 1));
+        sassert((pixel.r >= 0) && (pixel.r <= 1));
+        sassert((pixel.g >= 0) && (pixel.g <= 1));
+        sassert((pixel.b >= 0) && (pixel.b <= 1));
     }
     
     std::cout << "all tests passed" << std::endl;
