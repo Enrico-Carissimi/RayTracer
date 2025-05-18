@@ -1,44 +1,67 @@
 #include <iostream>
-#include <fstream>
-#include <vector>
 #include "HDRImage.hpp"
+#include "PFMreader.hpp"
+#include "Color.hpp"
+#include "Camera.hpp"
+#include "HitRecord.hpp"
+#include "Normal3.hpp"
+#include "Parameters.hpp"
+#include "Point3.hpp"
+#include "Ray.hpp"
+#include "shapes.hpp"
+#include "Transformation.hpp"
+#include "utils.hpp"
+#include "Vec2.hpp"
+#include "Vec3.hpp"
+#include "World.hpp"
+#include "CLI11.hpp"
 
-const unsigned int EXPECTED_ARGS = 4;
+// Funzione demo per generare un'immagine a scacchiera
+HDRImage demo() {
+    int width = 512, height = 512;
+    HDRImage image(width, height);
 
-void parseCommandLine(int argc, char* argv[], std::string& input, float& factor, float& gamma, std::string& output) {
-    if (argc != EXPECTED_ARGS + 1)
-        throw std::invalid_argument("ERROR: program expects " + std::to_string(EXPECTED_ARGS) + " arguments, "
-                                    + std::to_string(argc - 1) + " where given\nusage: ./main <input> <a> <gamma> <output>");
-
-    input = argv[1];
-
-    try {
-        factor = std::stof(argv[2]);
-    } catch (const std::exception&) {
-        throw std::runtime_error("ERROR: factor must be a floating-point number");
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            bool white = ((x / 64 + y / 64) % 2 == 0);
+            image.setPixel(x, y, white ? Color(1, 1, 1) : Color(0, 0, 0));
+        }
     }
 
-    try {
-        gamma = std::stof(argv[3]);
-    } catch (const std::exception&) {
-        throw std::runtime_error("ERROR: gamma must be a floating-point number");
-    }
-
-    output = argv[4];
+    return image;
 }
 
-
-
 int main(int argc, char* argv[]) {
-    float a, gamma; // !!! they must be positive too !!!
+    CLI::App app{"RayTracer CLI - convert or demo mode"};
+
     std::string inputFile, outputFile;
+    float a = 1.0f, gamma = 2.2f;
 
-    parseCommandLine(argc, argv, inputFile, a, gamma, outputFile);
+    //Convert Command
+    auto convert_cmd = app.add_subcommand("convert", "Convert a .pfm file to another format");
+    convert_cmd->add_option("input", inputFile, "Input .pfm file")->required();
+    convert_cmd->add_option("a", a, "Normalization factor")->required();
+    convert_cmd->add_option("gamma", gamma, "Gamma correction")->required();
+    convert_cmd->add_option("output", outputFile, "Output image file")->required();
 
-    HDRImage image(inputFile);
-    image.normalize(a);
-    image.clamp();
-    image.save(outputFile, gamma); // add error message if it fails to save?
+    //Convert Command
+    std::string demoOutput;
+    auto demo_cmd = app.add_subcommand("demo", "Generate a demo ray-traced image");
+    demo_cmd->add_option("output", demoOutput, "Output file for the demo")->required();
+
+    CLI11_PARSE(app, argc, argv);
+
+    if (*convert_cmd) {
+        HDRImage image(inputFile);
+        image.normalize(a);
+        image.clamp();
+        image.save(outputFile, gamma);
+    }
+    else if (*demo_cmd) {
+        HDRImage demoImage = demo();
+        demoImage.clamp();
+        demoImage.save(demoOutput, 2.2f);
+    }
 
     return 0;
 }
