@@ -8,7 +8,7 @@ void demo(std::string output, float angle) {
     World world;
 
     int nSpheres = 10;
-    Vec3 positions[nSpheres] = {
+    Vec3 positions[] = {
         Vec3{-0.5, -0.5, -0.5},
         Vec3{-0.5, -0.5, 0.5},
         Vec3{-0.5, 0.5, -0.5},
