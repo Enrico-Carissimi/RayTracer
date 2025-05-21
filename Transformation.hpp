@@ -40,7 +40,7 @@ public:
         }
     }
 
-    inline Transformation inverse() {
+    inline Transformation inverse() const {
         return Transformation(inverseMatrix, matrix);
     }
 
@@ -105,6 +105,9 @@ Transformation scaling(float s, Axis axis) {
     if (axis == Axis::X) return scaling(s, 1., 1.);
     if (axis == Axis::Y) return scaling(1., s, 1.);
     return scaling(1., 1., s); // Z
+}
+Transformation scaling(float s) {
+    return scaling(s, s, s);
 }
 
 Transformation translation(float x, float y, float z) {
