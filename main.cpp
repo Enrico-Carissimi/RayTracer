@@ -1,66 +1,79 @@
-#include <iostream>
-#include "HDRImage.hpp"
-#include "PFMreader.hpp"
-#include "Color.hpp"
 #include "Camera.hpp"
-#include "HitRecord.hpp"
-#include "Normal3.hpp"
-#include "Parameters.hpp"
-#include "Point3.hpp"
-#include "Ray.hpp"
-#include "shapes.hpp"
-#include "Transformation.hpp"
-#include "utils.hpp"
-#include "Vec2.hpp"
-#include "Vec3.hpp"
 #include "World.hpp"
-#include "CLI11.hpp"
+#include "lib/CLI11.hpp"
 
-// Funzione demo per generare un'immagine a scacchiera
-HDRImage demo() {
-    int width = 512, height = 512;
-    HDRImage image(width, height);
+// Demo command to generate an example image
+void demo(std::string output, float angle) {
+    Camera camera("perspective", 4. / 3., 400, 1., rotation(angle, Axis::Z) * translation(-1., 0., 0.));
+    World world;
 
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            bool white = ((x / 64 + y / 64) % 2 == 0);
-            image.setPixel(x, y, white ? Color(1, 1, 1) : Color(0, 0, 0));
-        }
+    int nSpheres = 10;
+    Vec3 positions[nSpheres] = {
+        Vec3{-0.5, -0.5, -0.5},
+        Vec3{-0.5, -0.5, 0.5},
+        Vec3{-0.5, 0.5, -0.5},
+        Vec3{0.5, -0.5, -0.5},
+        Vec3{-0.5, 0.5, 0.5},
+        Vec3{0.5, -0.5, 0.5},
+        Vec3{0.5, 0.5, -0.5},
+        Vec3{0.5, 0.5, 0.5},
+        Vec3{0., 0., -0.5},
+        Vec3{0., 0.5, 0.}
+    };
+    
+    for (int i = 0; i < nSpheres; i++) {
+        world.addShape(std::make_shared<Sphere>(Sphere(translation(positions[i]) * scaling(0.1))));
     }
 
-    return image;
+    camera.castAll([&world](Ray ray){
+        HitRecord rec;
+        return world.isHit(ray, rec) ? Color(1., 1., 1.) : Color(0., 0., 0.); 
+    });
+    camera.image.save("demo.pfm");
+    camera.image.normalize(1.);
+    camera.image.clamp();
+    camera.image.save(output);
 }
+
+
 
 int main(int argc, char* argv[]) {
     CLI::App app{"RayTracer CLI - convert or demo mode"};
 
+    // Convert Command
     std::string inputFile, outputFile;
-    float a = 1.0f, gamma = 2.2f;
+    float a = 1.0f, gamma = 1.0f;
 
-    //Convert Command
-    auto convert_cmd = app.add_subcommand("convert", "Convert a .pfm file to another format");
-    convert_cmd->add_option("input", inputFile, "Input .pfm file")->required();
-    convert_cmd->add_option("a", a, "Normalization factor")->required();
-    convert_cmd->add_option("gamma", gamma, "Gamma correction")->required();
-    convert_cmd->add_option("output", outputFile, "Output image file")->required();
+    auto convertCommand = app.add_subcommand("convert", "Convert a .pfm file to another format");
+    convertCommand->add_option("input,-i,--input", inputFile, "Input .pfm file")->required();
+    convertCommand->add_option("a,-a,--normalization", a, "Normalization factor, defaults to 1")->required();
+    convertCommand->add_option("gamma,-g,--gamma", gamma, "Gamma correction, defaults to 1")->required();
+    convertCommand->add_option("output,-o,--output", outputFile, "Output image file")->required();
 
-    //Convert Command
-    std::string demoOutput;
-    auto demo_cmd = app.add_subcommand("demo", "Generate a demo ray-traced image");
-    demo_cmd->add_option("output", demoOutput, "Output file for the demo")->required();
+    // Demo Command
+    std::string demoOutput = "demo.png";
+    float angle = 0.0f;
+
+    auto demoCommand = app.add_subcommand("demo", "Generate a demo ray-traced image, this always saves a \"demo.pfm\" image");
+    demoCommand->add_option("output,-o,--output", demoOutput, "Output file for the demo .png or .jpeg image");
+    demoCommand->add_option("--angle", angle, "Angle of the rotation around the Z axis, in degrees");
 
     CLI11_PARSE(app, argc, argv);
 
-    if (*convert_cmd) {
+
+
+    if (*convertCommand) {
         HDRImage image(inputFile);
         image.normalize(a);
         image.clamp();
         image.save(outputFile, gamma);
     }
-    else if (*demo_cmd) {
-        HDRImage demoImage = demo();
-        demoImage.clamp();
-        demoImage.save(demoOutput, 2.2f);
+    else if (*demoCommand) {
+        demo(demoOutput, angle);
+    }
+    else {
+        std::cout << "Program usage: " << argv[0] << " [demo or convert]\n"
+                  << "Run with --help for more information." << std::endl; 
     }
 
     return 0;
