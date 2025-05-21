@@ -106,6 +106,9 @@ Transformation scaling(float s, Axis axis) {
     if (axis == Axis::Y) return scaling(1., s, 1.);
     return scaling(1., 1., s); // Z
 }
+Transformation scaling(float s) {
+    return scaling(s, s, s);
+}
 
 Transformation translation(float x, float y, float z) {
     Transformation trasl(IDENTITY4, IDENTITY4);

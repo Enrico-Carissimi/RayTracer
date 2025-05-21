@@ -1,44 +1,80 @@
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include "HDRImage.hpp"
+#include "Camera.hpp"
+#include "World.hpp"
+#include "lib/CLI11.hpp"
 
-const unsigned int EXPECTED_ARGS = 4;
+// Demo command to generate an example image
+void demo(std::string output, float angle) {
+    Camera camera("perspective", 4. / 3., 400, 1., rotation(angle, Axis::Z) * translation(-1., 0., 0.));
+    World world;
 
-void parseCommandLine(int argc, char* argv[], std::string& input, float& factor, float& gamma, std::string& output) {
-    if (argc != EXPECTED_ARGS + 1)
-        throw std::invalid_argument("ERROR: program expects " + std::to_string(EXPECTED_ARGS) + " arguments, "
-                                    + std::to_string(argc - 1) + " where given\nusage: ./main <input> <a> <gamma> <output>");
-
-    input = argv[1];
-
-    try {
-        factor = std::stof(argv[2]);
-    } catch (const std::exception&) {
-        throw std::runtime_error("ERROR: factor must be a floating-point number");
+    int nSpheres = 10;
+    Vec3 positions[] = {
+        Vec3{-0.5, -0.5, -0.5},
+        Vec3{-0.5, -0.5, 0.5},
+        Vec3{-0.5, 0.5, -0.5},
+        Vec3{0.5, -0.5, -0.5},
+        Vec3{-0.5, 0.5, 0.5},
+        Vec3{0.5, -0.5, 0.5},
+        Vec3{0.5, 0.5, -0.5},
+        Vec3{0.5, 0.5, 0.5},
+        Vec3{0., 0., -0.5},
+        Vec3{0., 0.5, 0.}
+    };
+    
+    for (int i = 0; i < nSpheres; i++) {
+        world.addShape(std::make_shared<Sphere>(Sphere(translation(positions[i]) * scaling(0.1))));
     }
 
-    try {
-        gamma = std::stof(argv[3]);
-    } catch (const std::exception&) {
-        throw std::runtime_error("ERROR: gamma must be a floating-point number");
-    }
-
-    output = argv[4];
+    camera.castAll([&world](Ray ray){
+        HitRecord rec;
+        return world.isHit(ray, rec) ? Color(1., 1., 1.) : Color(0., 0., 0.); 
+    });
+    camera.image.save("demo.pfm");
+    camera.image.normalize(1.);
+    camera.image.clamp();
+    camera.image.save(output);
 }
 
 
 
 int main(int argc, char* argv[]) {
-    float a, gamma; // !!! they must be positive too !!!
+    CLI::App app{"RayTracer CLI - convert or demo mode"};
+
+    // Convert Command
     std::string inputFile, outputFile;
+    float a = 1.0f, gamma = 1.0f;
 
-    parseCommandLine(argc, argv, inputFile, a, gamma, outputFile);
+    auto convertCommand = app.add_subcommand("convert", "Convert a .pfm file to another format");
+    convertCommand->add_option("input,-i,--input", inputFile, "Input .pfm file")->required();
+    convertCommand->add_option("a,-a,--normalization", a, "Normalization factor, defaults to 1")->required();
+    convertCommand->add_option("gamma,-g,--gamma", gamma, "Gamma correction, defaults to 1")->required();
+    convertCommand->add_option("output,-o,--output", outputFile, "Output image file")->required();
 
-    HDRImage image(inputFile);
-    image.normalize(a);
-    image.clamp();
-    image.save(outputFile, gamma); // add error message if it fails to save?
+    // Demo Command
+    std::string demoOutput = "demo.png";
+    float angle = 0.0f;
+
+    auto demoCommand = app.add_subcommand("demo", "Generate a demo ray-traced image, this always saves a \"demo.pfm\" image");
+    demoCommand->add_option("output,-o,--output", demoOutput, "Output file for the demo .png or .jpeg image");
+    demoCommand->add_option("--angle", angle, "Angle of the rotation around the Z axis, in degrees");
+
+    CLI11_PARSE(app, argc, argv);
+
+
+
+    if (*convertCommand) {
+        HDRImage image(inputFile);
+        image.normalize(a);
+        image.clamp();
+        image.save(outputFile, gamma);
+    }
+    else if (*demoCommand) {
+        demo(demoOutput, angle);
+    }
+    else {
+        std::cout << "Program usage: " << argv[0] << " [demo or convert]\n"
+                  << "Run with --help for more information." << std::endl; 
+    }
 
     return 0;
 }

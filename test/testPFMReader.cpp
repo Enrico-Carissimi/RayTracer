@@ -1,5 +1,5 @@
-#include <cassert>
 #include "../HDRImage.hpp"
+#include "../utils.hpp"
 
 using std::cout, std::endl;
 
@@ -45,29 +45,29 @@ void testRead(const unsigned char* bytes, int length) {
     auto stream = streamFromArray(bytes, length);
     HDRImage image(stream);
 
-    assert(image._width == 3);
-    assert(image._height == 2);
+    sassert(image._width == 3);
+    sassert(image._height == 2);
 
-    assert(image.getPixel(0, 0).isClose(Color(1.0e1, 2.0e1, 3.0e1)));
-    assert(image.getPixel(1, 0).isClose(Color(4.0e1, 5.0e1, 6.0e1)));
-    assert(image.getPixel(2, 0).isClose(Color(7.0e1, 8.0e1, 9.0e1)));
-    assert(image.getPixel(0, 1).isClose(Color(1.0e2, 2.0e2, 3.0e2)));
-    assert(image.getPixel(1, 1).isClose(Color(4.0e2, 5.0e2, 6.0e2)));
-    assert(image.getPixel(2, 1).isClose(Color(7.0e2, 8.0e2, 9.0e2)));
+    sassert(image.getPixel(0, 0).isClose(Color(1.0e1, 2.0e1, 3.0e1)));
+    sassert(image.getPixel(1, 0).isClose(Color(4.0e1, 5.0e1, 6.0e1)));
+    sassert(image.getPixel(2, 0).isClose(Color(7.0e1, 8.0e1, 9.0e1)));
+    sassert(image.getPixel(0, 1).isClose(Color(1.0e2, 2.0e2, 3.0e2)));
+    sassert(image.getPixel(1, 1).isClose(Color(4.0e2, 5.0e2, 6.0e2)));
+    sassert(image.getPixel(2, 1).isClose(Color(7.0e2, 8.0e2, 9.0e2)));
 }
 
 void testReadFile(std::string name) {
     HDRImage image(name);
 
-    assert(image._width == 3);
-    assert(image._height == 2);
+    sassert(image._width == 3);
+    sassert(image._height == 2);
 
-    assert(image.getPixel(0, 0).isClose(Color(1.0e1, 2.0e1, 3.0e1)));
-    assert(image.getPixel(1, 0).isClose(Color(4.0e1, 5.0e1, 6.0e1)));
-    assert(image.getPixel(2, 0).isClose(Color(7.0e1, 8.0e1, 9.0e1)));
-    assert(image.getPixel(0, 1).isClose(Color(1.0e2, 2.0e2, 3.0e2)));
-    assert(image.getPixel(1, 1).isClose(Color(4.0e2, 5.0e2, 6.0e2)));
-    assert(image.getPixel(2, 1).isClose(Color(7.0e2, 8.0e2, 9.0e2)));
+    sassert(image.getPixel(0, 0).isClose(Color(1.0e1, 2.0e1, 3.0e1)));
+    sassert(image.getPixel(1, 0).isClose(Color(4.0e1, 5.0e1, 6.0e1)));
+    sassert(image.getPixel(2, 0).isClose(Color(7.0e1, 8.0e1, 9.0e1)));
+    sassert(image.getPixel(0, 1).isClose(Color(1.0e2, 2.0e2, 3.0e2)));
+    sassert(image.getPixel(1, 1).isClose(Color(4.0e2, 5.0e2, 6.0e2)));
+    sassert(image.getPixel(2, 1).isClose(Color(7.0e2, 8.0e2, 9.0e2)));
 }
 
 void testWritePMF() {
@@ -89,7 +89,7 @@ void testException(Parameter& parameter, Function function) {
     bool exceptionThrown = false;
     try{function(parameter);}
     catch(std::exception& e){exceptionThrown = true;}
-    assert(exceptionThrown);
+    sassert(exceptionThrown);
 }
 
 
@@ -99,13 +99,13 @@ int main(){
 
     // test readLine
     std::istringstream iss("hiii\nthis is a test!");
-    assert(readLine(iss) == "hiii");
-    assert(readLine(iss) == "this is a test!");
+    sassert(readLine(iss) == "hiii");
+    sassert(readLine(iss) == "this is a test!");
     testException(iss, readLine);
     cout << "readLine works" << endl;
 
     // test parseImageSize
-    assert(parseImageSize("2 5") == std::make_pair(2, 5));
+    sassert(parseImageSize("2 5") == std::make_pair(2, 5));
     testException("-2 5", parseImageSize); // negative size
     testException("2 0", parseImageSize); // zero size
     testException("2 a", parseImageSize); // not int
@@ -114,8 +114,8 @@ int main(){
     cout << "parseImageSize works" << endl;
 
     // test parseEndianness
-    assert(parseEndianness("-1.0") == Endianness::LITTLE);
-    assert(parseEndianness("1000.0") == Endianness::BIG);
+    sassert(parseEndianness("-1.0") == Endianness::LITTLE);
+    sassert(parseEndianness("1000.0") == Endianness::BIG);
     testException("e", parseEndianness); // can't convert to float
     testException("0.0", parseEndianness); // is zero
     cout << "parseEndianness works" << endl;
@@ -123,8 +123,8 @@ int main(){
     // test readFloat
     unsigned char toRead[] = {0x00, 0x00, 0xc8, 0x42, 0x43, 0x48, 0x00, 0x00, 0x00}; // {100 (le), 200 (be), bonus byte}
     auto stream = streamFromArray(toRead, 9);
-    assert(isClose(readFloat(stream, Endianness::LITTLE), 100));
-    assert(isClose(readFloat(stream, Endianness::BIG), 200));
+    sassert(isClose(readFloat(stream, Endianness::LITTLE), 100));
+    sassert(isClose(readFloat(stream, Endianness::BIG), 200));
     testException(stream, [](std::istringstream& ss) -> auto {return readFloat(ss, Endianness::BIG);}); // only 1 byte left
     cout << "readFloat works" << endl;
 
