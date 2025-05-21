@@ -2,7 +2,7 @@
 
 # Version 0.2.0
 
-- Add demo command
+- Add demo command #8
 - Fix an issue with the vertical order of generated images #6
 - Fix some tests not compiling in version 0.1.0
 
