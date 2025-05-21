@@ -44,15 +44,15 @@ public:
         input.close();
     }
 
-    int pixelIndex(int i, int j) {
+    int pixelIndex(int i, int j) const {
         return i + _width * j;
     }
 
-    bool validCoordinates(int i, int j) {
+    bool validCoordinates(int i, int j) const {
         return (i >= 0 && i < _width && j >= 0 && j < _height);
     }
 
-    void checkCoordinates(int i, int j) {
+    void checkCoordinates(int i, int j) const {
         if (!validCoordinates(i, j)) {
             throw std::invalid_argument("ERROR: trying to access invalid image coordinates (" + std::to_string(i) + ", " + std::to_string(j) + "), "
                                         + "image size is " + std::to_string(_width) + " x " + std::to_string(_height));
@@ -60,7 +60,7 @@ public:
         return;
     }
 
-    Color getPixel(int i, int j) {
+    Color getPixel(int i, int j) const {
         checkCoordinates(i, j);
         return _pixels[pixelIndex(i, j)];
     }
@@ -71,7 +71,7 @@ public:
         return;
     }
 
-    float averageLuminosity(float delta = 1e-10){
+    float averageLuminosity(float delta = 1e-10) {
         float sum = 0.0;
         for (const Color& pixel : _pixels) {
             sum += std::log10(pixel.luminosity() + delta);
