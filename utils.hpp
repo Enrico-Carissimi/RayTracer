@@ -5,6 +5,8 @@
 #include <source_location>
 #include <cmath>
 #include <string>
+#include <cstdint>
+#include <limits>
 
 #define PI 3.1415926535897932385
 
@@ -43,6 +45,45 @@ void sassert(bool expr, const std::source_location loc = std::source_location::c
         std::cout << "ERROR: assertion failed in function \"" << loc.function_name() << "\", in file \"" << loc.file_name() << "\" on line " << loc.line() << std::endl;
         exit(-1);
     }
+}
+
+namespace rng {
+
+class PCG {
+public:
+    uint64_t state;
+    uint64_t inc;
+
+    PCG(uint64_t initState = 42, uint64_t initSeq = 54) {
+        state = 0;
+        inc = (initSeq << 1u) | 1u;
+        random();
+        state = to_uint64(state + initState);
+        random();
+    }
+
+    uint32_t random() {
+        uint64_t oldState = state;
+        state = to_uint64(oldState * 6364136223846793005ULL + inc);
+        uint32_t xorshifted = to_uint32(((oldState >> 18u) ^ oldState) >> 27u);
+        uint32_t rot = static_cast<uint32_t>(oldState >> 59u);
+        return to_uint32((xorshifted >> rot) | (xorshifted << ((-rot) & 31)));
+    }
+
+    float random_float() {
+        return random() / static_cast<float>(0xffffffffU);
+    }
+
+private:
+    static uint64_t to_uint64(uint64_t x) {
+        return x & 0xffffffffffffffffULL;
+    }
+
+    static uint32_t to_uint32(uint32_t x) {
+        return x & 0xffffffffU;
+    }
+};
+
 }
 
 #endif
