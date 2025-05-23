@@ -83,7 +83,8 @@ void testOrientation() {
 
 void testCoverage() {
     Camera camera = setup();
-    camera.castAll([](Ray){ return Color(1., 2., 3.); });
+    World world;
+    camera.render(world, [](Ray, World){ return Color(1., 2., 3.); });
 
     for (int row = 0; row < camera.imageHeight; row++) {
         for (int col = 0; col < camera.imageWidth; col++) {
