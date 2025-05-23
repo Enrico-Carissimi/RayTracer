@@ -1,5 +1,6 @@
 #include "Camera.hpp"
 #include "World.hpp"
+#include "renderers.hpp"
 #include "lib/CLI11.hpp"
 
 using std::shared_ptr, std::make_shared;
@@ -33,10 +34,7 @@ void demo(std::string output, float angle) {
     world.addShape(make_shared<Sphere>(bottomMaterial, translation(positions[nSpheres - 2]) * scaling(0.1)));
     world.addShape(make_shared<Sphere>(sideMaterial, translation(positions[nSpheres - 1]) * scaling(0.1)));
 
-    camera.castAll([&world](Ray ray){
-        HitRecord rec;
-        return world.isHit(ray, rec) ? rec.material->eval(rec.surfacePoint) : Color(0., 0., 0.);
-    });
+    camera.render(world, Renderers::Flat);
     camera.image.save("demo.pfm");
     camera.image.normalize(1., 0.5);
     camera.image.clamp();
