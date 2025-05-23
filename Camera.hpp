@@ -6,6 +6,7 @@
 #include "Transformation.hpp"
 #include "HDRImage.hpp"
 #include "Ray.hpp"
+#include "World.hpp"
 
 
 
