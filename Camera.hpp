@@ -64,11 +64,11 @@ public:
 
     // casts rays to every pixel of the image and computes their color using a renderer
     template <typename Function>
-    void castAll(Function renderer) { // maybe rename to "render"?
+    void render(const World& world, Function renderer) { // was called "castAll"
         for (int j = 0; j < imageHeight; j++) {
             for (int i = 0; i < imageWidth; i++) {
                 Ray ray = castRay(i, j);
-                Color pixelColor = renderer(ray);
+                Color pixelColor = renderer(ray, world);
                 image.setPixel(i, j, pixelColor);
             }
         }
