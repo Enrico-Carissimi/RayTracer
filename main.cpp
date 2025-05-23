@@ -2,6 +2,8 @@
 #include "World.hpp"
 #include "lib/CLI11.hpp"
 
+using std::shared_ptr, std::make_shared;
+
 // Demo command to generate an example image
 void demo(std::string output, float angle) {
     Camera camera("perspective", 4. / 3., 400, 1., rotation(angle, Axis::Z) * translation(-1., 0., 0.));
@@ -20,17 +22,23 @@ void demo(std::string output, float angle) {
         Vec3{0., 0., -0.5},
         Vec3{0., 0.5, 0.}
     };
+
+    auto material = make_shared<Diffuse>(make_shared<Uniform>(Color(1., 0.5, 0.3)));
+    auto bottomMaterial = make_shared<Diffuse>(make_shared<Checkered>(Color(0., 1., 1.), Color(1., 0., 1.), 4));
+    auto sideMaterial = make_shared<Diffuse>(make_shared<FromImage>("../test/earth.pfm"));
     
-    for (int i = 0; i < nSpheres; i++) {
-        world.addShape(std::make_shared<Sphere>(Sphere(translation(positions[i]) * scaling(0.1))));
+    for (int i = 0; i < nSpheres - 2; i++) {
+        world.addShape(make_shared<Sphere>(material, translation(positions[i]) * scaling(0.1)));
     }
+    world.addShape(make_shared<Sphere>(bottomMaterial, translation(positions[nSpheres - 2]) * scaling(0.1)));
+    world.addShape(make_shared<Sphere>(sideMaterial, translation(positions[nSpheres - 1]) * scaling(0.1)));
 
     camera.castAll([&world](Ray ray){
         HitRecord rec;
-        return world.isHit(ray, rec) ? Color(1., 1., 1.) : Color(0., 0., 0.); 
+        return world.isHit(ray, rec) ? rec.material->eval(rec.surfacePoint) : Color(0., 0., 0.);
     });
     camera.image.save("demo.pfm");
-    camera.image.normalize(1.);
+    camera.image.normalize(1., 0.5);
     camera.image.clamp();
     camera.image.save(output);
 }
