@@ -5,6 +5,7 @@
 #include "HitRecord.hpp"
 #include "Transformation.hpp"
 #include "utils.hpp"
+#include "materials.hpp"
 
 // Helper to compute normal of a unit sphere
 inline Normal3 sphereNormal(const Point3& point, const Vec3& rayDir) {
@@ -24,7 +25,7 @@ class Shape {
 public:
     Transformation transformation;
 
-    Shape(const Transformation& t = Transformation()) : transformation(t) {}
+    Shape(std::shared_ptr<Material> material, const Transformation& t = Transformation()) : transformation(t), _material(material) {}
     virtual ~Shape() = default;
 
     virtual bool isHit(const Ray& r, HitRecord& rec) const = 0;
@@ -33,11 +34,14 @@ public:
         HitRecord dummy;
         return isHit(r, dummy);
     }
+
+protected:
+    std::shared_ptr<Material> _material;
 };
 
 class Sphere : public Shape {
 public:
-    Sphere(const Transformation& t = Transformation()) : Shape(t) {}
+    Sphere(std::shared_ptr<Material> material, const Transformation& t = Transformation()) : Shape(material, t) {}
     
     bool isHit(const Ray& r, HitRecord& rec) const override {
             
@@ -70,7 +74,8 @@ public:
         rec.ray = r;
         rec.worldPoint = transformation * localHit;  
         rec.normal = transformation * sphereNormal(localHit, invRay.direction);  
-        rec.surfacePoint = sphereUV(localHit); 
+        rec.surfacePoint = sphereUV(localHit);
+        rec.material = _material;
     
         return true;
     }
@@ -78,8 +83,7 @@ public:
 
 class Plane : public Shape {
 public:
-    Plane(const Transformation& t = Transformation())
-        : Shape(t) {}
+    Plane(std::shared_ptr<Material> material, const Transformation& t = Transformation()) : Shape(material, t) {}
 
     bool isHit(const Ray& ray, HitRecord& rec) const override {
         Ray invRay = ray.transform(transformation.inverse());
@@ -99,6 +103,7 @@ public:
         rec.surfacePoint = Vec2(hitPoint.x - std::floor(hitPoint.x), hitPoint.y - std::floor(hitPoint.y));
         rec.t = t;
         rec.ray = ray;
+        rec.material = _material;
 
         return true;
     }

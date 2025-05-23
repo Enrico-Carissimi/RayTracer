@@ -1,14 +1,15 @@
 #ifndef __HitRecord__
 #define __HitRecord__
 
-#include "Vec3.hpp"  
+#include "Vec3.hpp"
 #include "Point3.hpp"
-#include "Normal3.hpp"     
-#include "Vec2.hpp"     
+#include "Normal3.hpp"
+#include "Vec2.hpp"
 #include "Ray.hpp"
-//#include "material.hpp"   Material
 #include <memory>
 #include <cmath>
+
+class Material;
 
 struct HitRecord {
 
@@ -17,6 +18,7 @@ struct HitRecord {
     Vec2 surfacePoint;
     float t;
     Ray ray;
+    std::shared_ptr<Material> material;
 
     HitRecord() = default;
 
