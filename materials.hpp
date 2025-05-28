@@ -64,6 +64,7 @@ private:
 
 class Material {
 public:
+    Material() : _texture(std::make_shared<Uniform>(Color(0., 0., 0.))) {};
     Material(std::shared_ptr<Texture> texture) : _texture(texture) {}
     virtual ~Material() = default;
     virtual Color eval(Vec2 uv) const = 0;
@@ -74,6 +75,7 @@ protected:
 
 class Diffuse : public Material {
 public:
+    Diffuse() : Material(), _reflectance(1.) {}
     Diffuse(std::shared_ptr<Texture> texture, float reflectance = 1.) : Material(texture), _reflectance(reflectance / PI) {}
 
     Color eval(Vec2 uv) const override {
