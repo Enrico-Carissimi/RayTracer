@@ -25,7 +25,7 @@ public:
         //point_lights.push_back(light);
     //}
 
-    bool isHit(const Ray& ray, HitRecord& rec) {
+    bool isHit(const Ray& ray, HitRecord& rec) const {
         bool hit = false;
         float closest = ray.tmax;
     
