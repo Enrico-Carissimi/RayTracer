@@ -4,7 +4,7 @@
 
 using std::cout, std::endl;
 
-auto bufferMaterial = std::make_shared<Diffuse>(Diffuse());
+auto bufferMaterial = std::make_shared<DiffuseMaterial>(DiffuseMaterial());
 
 // tests for sphere
 namespace sphere {

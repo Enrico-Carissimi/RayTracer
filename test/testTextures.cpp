@@ -4,7 +4,7 @@
 
 void testUniformTexture() {
     Color color(1., 2., 3.);
-    Uniform texture(color);
+    UniformTexture texture(color);
 
     sassert(texture.color(Vec2(0., 0.)).isClose(color));
     sassert(texture.color(Vec2(1., 0.)).isClose(color));
@@ -21,7 +21,7 @@ void testImageTexture(){
     image.setPixel(0, 1, Color(2., 1., 3.));
     image.setPixel(1, 1, Color(3., 2., 1.));
 
-    FromImage texture(image);
+    ImageTexture texture(image);
     sassert(texture.color(Vec2(0., 0.)).isClose(Color(1., 2., 3.)));
     sassert(texture.color(Vec2(1., 0.)).isClose(Color(2., 3., 1.)));
     sassert(texture.color(Vec2(0., 1.)).isClose(Color(2., 1., 3.)));
@@ -34,7 +34,7 @@ void testCheckeredTexture(){
     Color color1(1., 2., 3.);
     Color color2(10., 20., 30.);
 
-    Checkered texture(color1, color2, 2);
+    CheckeredTexture texture(color1, color2, 2);
 
     // With nSteps == 2, the pattern should be the following:
     //

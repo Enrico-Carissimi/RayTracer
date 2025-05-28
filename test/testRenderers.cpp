@@ -6,7 +6,7 @@ const Color BLACK(0., 0., 0.);
 const Color WHITE(1., 1., 1.);
 
 void testOnOffRenderer() {
-    auto material = std::make_shared<Diffuse>(std::make_shared<Uniform>(WHITE));
+    auto material = std::make_shared<DiffuseMaterial>(std::make_shared<UniformTexture>(WHITE));
     Sphere sphere(material, translation(Vec3(2., 0., 0.)) * scaling(Vec3(0.2, 0.2, 0.2)));
 
     Camera camera("orthogonal", 1., 3.);
@@ -31,7 +31,7 @@ void testOnOffRenderer() {
 
 void testFlatRenderer() {
     Color color(1.0, 2.0, 3.0);
-    auto material = std::make_shared<Diffuse>(std::make_shared<Uniform>(color));
+    auto material = std::make_shared<DiffuseMaterial>(std::make_shared<UniformTexture>(color));
     Sphere sphere(material, translation(Vec3(2., 0., 0.)) * scaling(Vec3(0.2, 0.2, 0.2)));
     Camera camera("orthogonal", 1., 3);
     World world;

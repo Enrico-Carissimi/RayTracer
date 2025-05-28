@@ -41,7 +41,7 @@ protected:
 
 class Sphere : public Shape {
 public:
-    Sphere(std::shared_ptr<Material> material = std::make_shared<Diffuse>(Diffuse()), const Transformation& t = Transformation()) : Shape(material, t) {}
+    Sphere(std::shared_ptr<Material> material = std::make_shared<DiffuseMaterial>(DiffuseMaterial()), const Transformation& t = Transformation()) : Shape(material, t) {}
     
     bool isHit(const Ray& r, HitRecord& rec) const override {
             
@@ -83,7 +83,7 @@ public:
 
 class Plane : public Shape {
 public:
-    Plane(std::shared_ptr<Material> material = std::make_shared<Diffuse>(Diffuse()), const Transformation& t = Transformation()) : Shape(material, t) {}
+    Plane(std::shared_ptr<Material> material = std::make_shared<DiffuseMaterial>(DiffuseMaterial()), const Transformation& t = Transformation()) : Shape(material, t) {}
 
     bool isHit(const Ray& ray, HitRecord& rec) const override {
         Ray invRay = ray.transform(transformation.inverse());
