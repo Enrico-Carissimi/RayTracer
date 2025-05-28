@@ -47,8 +47,6 @@ void sassert(bool expr, const std::source_location loc = std::source_location::c
     }
 }
 
-namespace rng {
-
 class PCG {
 public:
     uint64_t state;
@@ -58,32 +56,23 @@ public:
         state = 0;
         inc = (initSeq << 1u) | 1u;
         random();
-        state = to_uint64(state + initState);
+        state = (state + initState);
         random();
     }
 
-    uint32_t random() {
+    uint32_t randomUint32() {
         uint64_t oldState = state;
-        state = to_uint64(oldState * 6364136223846793005ULL + inc);
-        uint32_t xorshifted = to_uint32(((oldState >> 18u) ^ oldState) >> 27u);
+        state = static_cast<uint64_t>(oldState * 6364136223846793005ULL + inc);
+        uint32_t xorshifted = static_cast<uint32_t>(((oldState >> 18u) ^ oldState) >> 27u);
         uint32_t rot = static_cast<uint32_t>(oldState >> 59u);
-        return to_uint32((xorshifted >> rot) | (xorshifted << ((-rot) & 31)));
+        return (((xorshifted >> rot) | (xorshifted << ((-rot) & 31))));
     }
 
-    float random_float() {
-        return random() / static_cast<float>(0xffffffffU);
-    }
+    float random() {
 
-private:
-    static uint64_t to_uint64(uint64_t x) {
-        return x & 0xffffffffffffffffULL;
-    }
+        return randomUint32() / static_cast<float>(0xffffffffU);
 
-    static uint32_t to_uint32(uint32_t x) {
-        return x & 0xffffffffU;
     }
 };
-
-}
 
 #endif

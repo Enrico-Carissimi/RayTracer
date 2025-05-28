@@ -1,9 +1,8 @@
 #include <iostream>
 #include "../utils.hpp"
-#include <cassert>
 
 int main() {
-    rng::PCG pcg;
+    PCG pcg;
     std::cout << "State: " << pcg.state << "\n";
     std::cout << "Inc:   " << pcg.inc << "\n";
 
@@ -17,9 +16,9 @@ int main() {
     };
 
     for (int i = 0; i < 6; ++i) {
-        uint32_t result = pcg.random();
+        uint32_t result = pcg.randomUint32();
         std::cout << "Result " << i << ": " << result << "\n";
-        assert(result == expected[i]);
+        sassert(result == expected[i]);
     }
 
     std::cout << "All tests passed.\n";
