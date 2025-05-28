@@ -44,7 +44,7 @@ struct Normal3 {
 
 // Dot and cross products between Normals and with Vec
 inline float dot(const Normal3& n, const Vec3& v) { return n.x * v.x + n.y * v.y + n.z * v.z; }
-inline float dot(const Vec3& v, Normal3& n) { return dot(n, v); } // explicit's fault
+inline float dot(const Vec3& v, const Normal3& n) { return dot(n, v); } // explicit's fault
 inline float dot(const Normal3& n, const Normal3& m) { return n.x * m.x + n.y * m.x + n.z * m.z; }
 
 inline Vec3 cross(const Normal3& n, const Vec3& v) {
