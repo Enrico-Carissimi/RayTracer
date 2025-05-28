@@ -5,6 +5,8 @@
 #include <source_location>
 #include <cmath>
 #include <string>
+#include <cstdint>
+#include <limits>
 
 #define PI 3.1415926535897932385
 
@@ -44,5 +46,33 @@ void sassert(bool expr, const std::source_location loc = std::source_location::c
         exit(-1);
     }
 }
+
+class PCG {
+public:
+    uint64_t state;
+    uint64_t inc;
+
+    PCG(uint64_t initState = 42, uint64_t initSeq = 54) {
+        state = 0;
+        inc = (initSeq << 1u) | 1u;
+        random();
+        state = (state + initState);
+        random();
+    }
+
+    uint32_t randomUint32() {
+        uint64_t oldState = state;
+        state = static_cast<uint64_t>(oldState * 6364136223846793005ULL + inc);
+        uint32_t xorshifted = static_cast<uint32_t>(((oldState >> 18u) ^ oldState) >> 27u);
+        uint32_t rot = static_cast<uint32_t>(oldState >> 59u);
+        return (((xorshifted >> rot) | (xorshifted << ((-rot) & 31))));
+    }
+
+    float random() {
+
+        return randomUint32() / static_cast<float>(0xffffffffU);
+
+    }
+};
 
 #endif
