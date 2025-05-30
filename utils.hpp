@@ -9,6 +9,7 @@
 #include <limits>
 
 #define PI 3.1415926535897932385
+const float INF = std::numeric_limits<float>::infinity();
 
 
 
