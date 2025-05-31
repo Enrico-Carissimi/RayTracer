@@ -11,7 +11,7 @@
 
 class World {
 public:
-    
+    Color backgroundColor;
     //std::vector<PointLight> pointLights;         // Lista di luci
 
     World() = default;
