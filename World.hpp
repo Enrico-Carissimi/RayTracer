@@ -19,7 +19,7 @@ struct PointLight {
 
 class World {
 public:
-    
+    Color backgroundColor;
     std::vector<PointLight> pointLights;
 
     World() = default;

@@ -23,6 +23,20 @@ public:
         return Color(r * scalar, g * scalar, b * scalar);
     }
 
+    Color& operator+=(const Color& other) {
+        r += other.r;
+        g += other.g;
+        b += other.b;
+        return *this;
+    }
+
+    Color& operator*=(float scalar) {
+        r *= scalar;
+        g *= scalar;
+        b *= scalar;
+        return *this;
+    }
+
     bool isClose(const Color& other, float epsilon = 1e-5f) const {
         return (std::fabs(r - other.r) < epsilon) &&
                (std::fabs(g - other.g) < epsilon) &&

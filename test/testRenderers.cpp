@@ -12,7 +12,7 @@ void testOnOffRenderer() {
     Camera camera("orthogonal", 1., 3.);
     World world;
     world.addShape(std::make_shared<Sphere>(sphere));
-    camera.render(world, Renderers::OnOff);
+    camera.render(Renderers::OnOff, world);
 
     sassert(camera.image.getPixel(0, 0).isClose(BLACK));
     sassert(camera.image.getPixel(1, 0).isClose(BLACK));
@@ -36,7 +36,7 @@ void testFlatRenderer() {
     Camera camera("orthogonal", 1., 3);
     World world;
     world.addShape(std::make_shared<Sphere>(sphere));
-    camera.render(world, Renderers::Flat);
+    camera.render(Renderers::Flat, world);
 
     sassert(camera.image.getPixel(0, 0).isClose(BLACK));
     sassert(camera.image.getPixel(1, 0).isClose(BLACK));

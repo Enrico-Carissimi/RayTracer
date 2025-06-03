@@ -64,15 +64,18 @@ public:
     }
 
     // casts rays to every pixel of the image and computes their color using a renderer
-    template <typename Function>
-    void render(const World& world, Function renderer) { // was called "castAll"
+    template <typename Function, typename... Args>
+    void render(Function renderer, Args... args) { // was called "castAll"
         for (int j = 0; j < imageHeight; j++) {
+            std::cout << "\rdrawing row " << j + 1 << "/" << imageHeight << std::flush;
             for (int i = 0; i < imageWidth; i++) {
                 Ray ray = castRay(i, j);
-                Color pixelColor = renderer(ray, world);
+                Color pixelColor = renderer(ray, args...); // first arg should be world
                 image.setPixel(i, j, pixelColor);
             }
         }
+
+        std::cout << "\rimage drawn            " << std::endl;
     }
 
 private:
