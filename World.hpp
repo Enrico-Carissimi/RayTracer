@@ -6,13 +6,21 @@
 #include "shapes.hpp"
 #include "Ray.hpp"
 #include "HitRecord.hpp"
-//#include "PointLight.hpp"
 #include "Point3.hpp"
+
+struct PointLight {
+    Point3 position;
+    Color color;
+    float linearRadius;
+
+    PointLight(const Point3& pos, const Color& col, float radius = 1.0f)
+        : position(pos), color(col), linearRadius(radius) {}
+};
 
 class World {
 public:
     
-    //std::vector<PointLight> pointLights;         // Lista di luci
+    std::vector<PointLight> pointLights;
 
     World() = default;
 
@@ -20,10 +28,9 @@ public:
         _shapes.push_back(shape);
     }
 
-    // Metodo per aggiungere una luce al mondo
-    //void add_light(const PointLight& light) {
-        //point_lights.push_back(light);
-    //}
+    void addLlight(const PointLight& light) {
+        pointLights.push_back(light);
+    }
 
     bool isHit(const Ray& ray, HitRecord& rec) const {
         bool hit = false;
