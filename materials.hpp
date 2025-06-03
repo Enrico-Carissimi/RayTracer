@@ -70,6 +70,10 @@ public:
     virtual Color eval(Vec2 uv) const = 0;
     virtual Ray scatterRay(const PCG& pcg, const Vec3& incomingDir, const Point3& interactionPoint,
                            const Normal3& normal, int depth) const = 0;
+    virtual Color emittedRadiance(Vec2 uv) const {
+        return Color(0.0f, 0.0f, 0.0f);
+}
+
 
 protected:
     std::shared_ptr<Texture> _texture;
