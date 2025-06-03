@@ -10,7 +10,7 @@
 class Texture { // I don't like the name "pigment"
 public:
     virtual ~Texture() = default;
-    virtual Color color(Vec2 uv) const = 0;
+    virtual Color color(const Vec2& uv) const = 0;
 };
 
 class UniformTexture : public Texture {
@@ -18,7 +18,7 @@ public:
     UniformTexture() : _color(Color(0., 0., 0.)) {}
     UniformTexture(const Color& c) : _color(c) {}
 
-    Color color(Vec2 uv) const override {
+    Color color(const Vec2& uv) const override {
         return _color;
     }
 
@@ -31,7 +31,7 @@ public:
     CheckeredTexture() : _color1(Color(0., 0., 0.)), _color2(Color(1., 1., 1.)), _nSteps(8) {}
     CheckeredTexture(const Color& c1, const Color& c2, int nSteps = 8) : _color1(c1), _color2(c2), _nSteps(nSteps) {}
 
-    Color color(Vec2 uv) const override {
+    Color color(const Vec2& uv) const override {
         int u = std::floor(uv.u * _nSteps);
         int v = std::floor(uv.v * _nSteps);
         return (u + v) % 2 == 0 ? _color1 : _color2;
@@ -45,13 +45,13 @@ private:
 class ImageTexture : public Texture {
 public:
     ImageTexture(const std::string& name) : _PFM(name) {_PFM.normalize(1.); _PFM.clamp();}
-    ImageTexture(const HDRImage image) : _PFM(image) {}
+    ImageTexture(const HDRImage& image) : _PFM(image) {}
 
-    Color color(Vec2 uv) const override {
+    Color color(const Vec2& uv) const override {
         int i = uv.u * _PFM._width;
         int j = uv.v * _PFM._height;
 
-        i -= (i >= _PFM._width), j -= (j >= _PFM._width); // if i >= width then i = i - 1
+        i -= (i >= _PFM._width), j -= (j >= _PFM._height); // if i >= width then i = i - 1
 
         return _PFM.getPixel(i, j); // interpolation!
     }
@@ -64,15 +64,20 @@ private:
 
 class Material {
 public:
-    Material() : _texture(std::make_shared<UniformTexture>(Color(0., 0., 0.))) {};
-    Material(std::shared_ptr<Texture> texture) : _texture(texture) {}
+    Material() : _texture(std::make_shared<UniformTexture>(Color(0., 0., 0.))), _emittedRadiance(std::make_shared<UniformTexture>(Color(0., 0., 0.))) {};
+    Material(std::shared_ptr<Texture> texture) : _texture(texture), _emittedRadiance(std::make_shared<UniformTexture>(Color(0., 0., 0.))) {}
     virtual ~Material() = default;
-    virtual Color eval(Vec2 uv) const = 0;
-    virtual Ray scatterRay(const PCG& pcg, const Vec3& incomingDir, const Point3& interactionPoint,
+    
+    Color color(const Vec2& uv) { return _texture->color(uv); }
+    Color emittedColor(const Vec2& uv) { return _emittedRadiance->color(uv); }
+    
+    virtual Color eval(const Vec2& uv, float thetaIn, float thetaOut) const = 0;
+    virtual Ray scatterRay(PCG& pcg, const Vec3& incomingDir, const Point3& interactionPoint,
                            const Normal3& normal, int depth) const = 0;
 
 protected:
     std::shared_ptr<Texture> _texture;
+    std::shared_ptr<Texture> _emittedRadiance;
 };
 
 class DiffuseMaterial : public Material {
@@ -80,8 +85,20 @@ public:
     DiffuseMaterial() : Material(), _reflectance(1.) {}
     DiffuseMaterial(std::shared_ptr<Texture> texture, float reflectance = 1.) : Material(texture), _reflectance(reflectance / PI) {}
 
-    Color eval(Vec2 uv) const override {
+    Color eval(const Vec2& uv, float thetaIn = 0., float thetaOut = 0.) const override {
         return _texture->color(uv) * _reflectance;
+    }
+
+    Ray scatterRay(PCG& pcg, const Vec3& incomingDir, const Point3& interactionPoint, const Normal3& normal, int depth) const override {
+        // cosine-weighted distribution around the z (local) axis
+        Vec3 e1(normal.x, normal.y, normal.z);
+        Vec3 e2, e3;
+        createONB(e1, e2, e3);
+        float cos2 = pcg.random();
+        float cos = std::sqrt(cos2), sin = sqrt(1. - cos2);
+        float phi = 2. * PI * pcg.random();
+
+        return Ray(interactionPoint, e1 * std::cos(phi) * cos + e2 * std::sin(phi) * cos + e3 * sin, 1e-3, INF, depth);
     }
 
 private:
@@ -90,19 +107,19 @@ private:
 
 class SpecularMaterial : public Material {
 public:
-    SpecularMaterial(std::shared_ptr<Texture> texture = std::make_shared<UniformTexture>(Color(1.0f, 1.0f, 1.0f)),
-                 double thresholdAngleRad = PI / 1800.0)
-        : Material(texture), thresholdAngleRad(thresholdAngleRad) {}
+    SpecularMaterial() : Material(), _thresholdAngleRad(PI / 1800.0) {}
+    SpecularMaterial(std::shared_ptr<Texture> texture, float thresholdAngleRad = PI / 1800.0)
+        : Material(texture), _thresholdAngleRad(thresholdAngleRad) {}
 
-        Color eval(double thetaIn, double thetaOut, const Vec2& uv) const {
-        if (std::abs(thetaIn - thetaOut) < thresholdAngleRad) {
+    Color eval(const Vec2& uv, float thetaIn, float thetaOut) const override {
+        if (std::abs(thetaIn - thetaOut) < _thresholdAngleRad) {
             return _texture->color(uv);
         } else {
             return Color(0.0, 0.0, 0.0);
         }
     };
 
-    Ray scatterRay(const PCG& pcg, const Vec3& incomingDir, const Point3& interactionPoint,
+    Ray scatterRay(PCG& pcg, const Vec3& incomingDir, const Point3& interactionPoint,
                     const Normal3& normal, int depth) const override {
         Vec3 rayDir = incomingDir.normalize();
         Vec3 norm(normal.x, normal.y, normal.z);
@@ -115,7 +132,7 @@ public:
     }
 
 private:
-    double thresholdAngleRad;
+    double _thresholdAngleRad;
 };
 
 #endif
