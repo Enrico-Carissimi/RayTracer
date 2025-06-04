@@ -28,7 +28,7 @@ public:
         _shapes.push_back(shape);
     }
 
-    void addLlight(const PointLight& light) {
+    void addLight(const PointLight& light) {
         pointLights.push_back(light);
     }
 
@@ -55,7 +55,7 @@ public:
     }
     
     
-    bool isPointVisible(const Point3& point, const Point3& observerPos) {
+    bool isPointVisible(const Point3& point, const Point3& observerPos) const {
         Vec3 direction = point - observerPos;
         float dirNorm = direction.norm();
 
