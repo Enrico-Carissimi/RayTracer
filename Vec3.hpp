@@ -24,14 +24,14 @@ struct Vec3 {
 
     // Scalar multiplication and negation
     inline Vec3 operator*(float scalar) const { return {x * scalar, y * scalar, z * scalar}; }
-    inline Vec3 operator/(float scalar) const { return {x / scalar, y / scalar, z * scalar}; }
+    inline Vec3 operator/(float scalar) const { return {x / scalar, y / scalar, z / scalar}; }
     inline Vec3 operator-() const { return {-x, -y, -z}; }
     
     // Squared norm and norm
     inline float norm2() const { return x * x + y * y + z * z; }
     inline float norm() const { return std::sqrt(norm2()); }
     
-    // Normalize the Vec3tor
+    // Normalize the Vector
     inline Vec3 normalize() const {
         float n = norm();
         return (n > 0) ? (*this / n) : Vec3();
