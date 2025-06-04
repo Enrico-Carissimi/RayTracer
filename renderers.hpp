@@ -18,7 +18,7 @@ auto PathTracer = [](const Ray& ray, const World& world, PCG& pcg, int nRays = 8
 
     // we need to do this to use recursion without passing the lambda to itself in the parameters of Camera::render
     auto actualFunction = [](const auto& self, const Ray& ray, const World& world, PCG& pcg, int nRays, // ew
-                              int maxDepth, int russianRouletteLimit) -> Color {
+                             int maxDepth, int russianRouletteLimit) -> Color {
 
         if (ray.depth > maxDepth) { return Color(0., 0., 0.); }
 
@@ -58,17 +58,16 @@ auto PathTracer = [](const Ray& ray, const World& world, PCG& pcg, int nRays = 8
     return actualFunction(actualFunction, ray, world, pcg, nRays, maxDepth, russianRouletteLimit);
 };
 
-auto PointLight = [](Ray ray, const World& world,
-                     Color backgroundColor = Color(0., 0., 0.),
+auto PointLight = [](const Ray& ray, const World& world,
                      Color ambientColor = Color(0.1, 0.1, 0.1)) {
     HitRecord hit;
     if (!world.isHit(ray, hit))
-        return backgroundColor;
+        return world.backgroundColor;
 
     Color resultColor = ambientColor;
 
     for (const auto& light : world.pointLights) {
-        if (const_cast<World&>(world).isPointVisible(light.position, hit.worldPoint)) {
+        if (world.isPointVisible(light.position, hit.worldPoint)) {
             Vec3 distanceVec = hit.worldPoint - light.position;
             float distance = distanceVec.norm();
             Vec3 inDir = distanceVec * (1.0f / distance); // normalize
@@ -79,7 +78,14 @@ auto PointLight = [](Ray ray, const World& world,
                                      : 1.0f;
 
             Color emitted = hit.material->emittedRadiance(hit.surfacePoint);
-            Color brdf = hit.material->eval(hit.surfacePoint);
+            Vec3 inDir2 = (light.position - hit.worldPoint).normalize();
+            Vec3 outDir = -ray.direction.normalize();
+
+            float thetaIn = std::acos(std::clamp(dot(hit.normal, inDir2), -1.0f, 1.0f));
+            float thetaOut = std::acos(std::clamp(dot(hit.normal, outDir), -1.0f, 1.0f));
+
+            Color brdf = hit.material->eval(hit.surfacePoint, thetaIn, thetaOut);
+
 
             resultColor = resultColor + (emitted + brdf) * light.color * cosTheta * distanceFactor;
         }
