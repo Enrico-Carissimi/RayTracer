@@ -65,7 +65,7 @@ private:
 class Material {
 public:
     Material() : _texture(std::make_shared<UniformTexture>(Color(0., 0., 0.))), _emittedRadiance(std::make_shared<UniformTexture>(Color(0., 0., 0.))) {};
-    Material(std::shared_ptr<Texture> texture) : _texture(texture), _emittedRadiance(std::make_shared<UniformTexture>(Color(0., 0., 0.))) {}
+    Material(std::shared_ptr<Texture> texture, std::shared_ptr<Texture> emittedRadiance) : _texture(texture), _emittedRadiance(emittedRadiance) {}
     virtual ~Material() = default;
     
     Color color(const Vec2& uv) { return _texture->color(uv); }
@@ -76,8 +76,7 @@ public:
                            const Normal3& normal, int depth) const = 0;
     virtual Color emittedRadiance(Vec2 uv) const {
         return Color(0.0f, 0.0f, 0.0f);
-}
-
+    }
 
 protected:
     std::shared_ptr<Texture> _texture;
@@ -87,7 +86,8 @@ protected:
 class DiffuseMaterial : public Material {
 public:
     DiffuseMaterial() : Material(), _reflectance(1.) {}
-    DiffuseMaterial(std::shared_ptr<Texture> texture, float reflectance = 1.) : Material(texture), _reflectance(reflectance / PI) {}
+    DiffuseMaterial(std::shared_ptr<Texture> texture, std::shared_ptr<Texture> emittedRadiance, float reflectance = 1.)
+        : Material(texture, emittedRadiance), _reflectance(reflectance / PI) {}
 
     Color eval(const Vec2& uv, float thetaIn = 0., float thetaOut = 0.) const override {
         return _texture->color(uv) * _reflectance;
@@ -112,8 +112,8 @@ private:
 class SpecularMaterial : public Material {
 public:
     SpecularMaterial() : Material(), _thresholdAngleRad(PI / 1800.0) {}
-    SpecularMaterial(std::shared_ptr<Texture> texture, float thresholdAngleRad = PI / 1800.0)
-        : Material(texture), _thresholdAngleRad(thresholdAngleRad) {}
+    SpecularMaterial(std::shared_ptr<Texture> texture, std::shared_ptr<Texture> emittedRadiance, float thresholdAngleRad = PI / 1800.0)
+        : Material(texture, emittedRadiance), _thresholdAngleRad(thresholdAngleRad) {}
 
     Color eval(const Vec2& uv, float thetaIn, float thetaOut) const override {
         if (std::abs(thetaIn - thetaOut) < _thresholdAngleRad) {

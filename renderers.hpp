@@ -77,7 +77,7 @@ auto PointLight = [](const Ray& ray, const World& world,
                                      ? std::pow(light.linearRadius / distance, 2.0f)
                                      : 1.0f;
 
-            Color emitted = hit.material->emittedRadiance(hit.surfacePoint);
+            Color emitted = hit.material->emittedColor(hit.surfacePoint);
             Vec3 inDir2 = (light.position - hit.worldPoint).normalize();
             Vec3 outDir = -ray.direction.normalize();
 
