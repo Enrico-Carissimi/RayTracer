@@ -235,11 +235,39 @@ void testScaling() {
     sassert(expected.isClose(tr1 * tr2));
 }
 
+float epsilon = 1e-3;
+
+void testONB() {
+
+    PCG pcg;
+
+    for (int i = 0; i < 100; ++i) {
+        Vec3 normal = Vec3(pcg.random(), pcg.random(), pcg.random()).normalize();
+
+        Vec3 e1, e2, e3;
+        e3 = normal;
+        createONB(e3, e1, e2);
+
+        sassert(areClose(e3.x, normal.x));
+        sassert(areClose(e3.y, normal.y));
+        sassert(areClose(e3.z, normal.z));
+
+        sassert(areClose(e1.norm(), 1.0f, epsilon));
+        sassert(areClose(e2.norm(), 1.0f, epsilon));
+        sassert(areClose(e3.norm(), 1.0f, epsilon));
+
+        sassert(areClose(dot(e1, e2), 0.0f, epsilon));
+        sassert(areClose(dot(e2, e3), 0.0f, epsilon));
+        sassert(areClose(dot(e3, e1), 0.0f, epsilon));
+    }
+}
+
 
 
 int main() {
     testVec3operations();
     testPoint3operations();
+
     testTrasformation();
     testTransformationMultiplication();
     testVecPointMultiplication();
@@ -247,6 +275,8 @@ int main() {
     testTranslation();
     testRotation();
     testScaling();
+
+    testONB();
     
     std::cout << "All tests passed!\n";
     return 0;
