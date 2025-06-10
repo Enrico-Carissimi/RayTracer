@@ -7,36 +7,27 @@ using std::shared_ptr, std::make_shared;
 
 // Demo command to generate an example image
 void demo(std::string output, float angle) {
-    Camera camera("perspective", 4. / 3., 400, 1., rotation(angle, Axis::Z) * translation(-1., 0., 0.));
+    Camera camera("perspective", 4. / 3., 640, 1., rotation(angle, Axis::Z) * translation(-1., 0., 0.));
     World world;
 
-    int nSpheres = 10;
-    Vec3 positions[] = {
-        Vec3{-0.5, -0.5, -0.5},
-        Vec3{-0.5, -0.5, 0.5},
-        Vec3{-0.5, 0.5, -0.5},
-        Vec3{0.5, -0.5, -0.5},
-        Vec3{-0.5, 0.5, 0.5},
-        Vec3{0.5, -0.5, 0.5},
-        Vec3{0.5, 0.5, -0.5},
-        Vec3{0.5, 0.5, 0.5},
-        Vec3{0., 0., -0.5},
-        Vec3{0., 0.5, 0.}
-    };
+    auto material = make_shared<DiffuseMaterial>(make_shared<UniformTexture>(Color(1., 0.5, 0.3)));
+    auto skyMaterial = make_shared<DiffuseMaterial>(make_shared<UniformTexture>(Color()), make_shared<UniformTexture>(Color(0.3, 0.6, 1.)));
+    auto reflectMaterial = make_shared<SpecularMaterial>(make_shared<UniformTexture>(Color(0.1, 0.9, 0.4)));
+    auto floorMaterial = make_shared<DiffuseMaterial>(make_shared<CheckeredTexture>(Color(0., 1., 1.), Color(1., 0., 1.), 4));
 
-    auto material = make_shared<Diffuse>(make_shared<Uniform>(Color(1., 0.5, 0.3)));
-    auto bottomMaterial = make_shared<Diffuse>(make_shared<Checkered>(Color(0., 1., 1.), Color(1., 0., 1.), 4));
-    auto sideMaterial = make_shared<Diffuse>(make_shared<FromImage>("../test/earth.pfm"));
+    world.addShape(make_shared<Sphere>(material, translation(0., 0., -0.2) * scaling(0.8)));
+    world.addShape(make_shared<Sphere>(skyMaterial, translation(0., 0., 0.) * scaling(100.)));
+    world.addShape(make_shared<Sphere>(reflectMaterial, translation(1., 2., -0.9)));
+    world.addShape(make_shared<Plane>(floorMaterial, translation(0., 0., -1.)));
+
     
-    for (int i = 0; i < nSpheres - 2; i++) {
-        world.addShape(make_shared<Sphere>(material, translation(positions[i]) * scaling(0.1)));
-    }
-    world.addShape(make_shared<Sphere>(bottomMaterial, translation(positions[nSpheres - 2]) * scaling(0.1)));
-    world.addShape(make_shared<Sphere>(sideMaterial, translation(positions[nSpheres - 1]) * scaling(0.1)));
 
-    camera.render(world, Renderers::Flat);
+    PCG pcg;
+    int nRays = 10, maxDepth = 4, russianRouletteLimit = 3;
+
+    camera.render(Renderers::PathTracer, world, pcg, nRays, maxDepth, russianRouletteLimit);
     camera.image.save("demo.pfm");
-    camera.image.normalize(1., 0.5);
+    camera.image.normalize(1.);
     camera.image.clamp();
     camera.image.save(output);
 }
