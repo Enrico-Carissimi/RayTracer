@@ -70,21 +70,23 @@ auto PointLight = [](const Ray& ray, const World& world,
         if (world.isPointVisible(light.position, hit.worldPoint)) {
             Vec3 distanceVec = hit.worldPoint - light.position;
             float distance = distanceVec.norm();
-            Vec3 inDir = distanceVec * (1.0f / distance); // normalize
+            Vec3 inDir = distanceVec / distance; // normalize
 
-            float cosTheta = std::max(0.0f, dot(-ray.direction.normalize(), hit.normal.normalize()));
+            float cosTheta = std::max(0.0f, dot(hit.normal.normalize(), -inDir));
+
             float distanceFactor = (light.linearRadius > 0.0f)
-                                     ? std::pow(light.linearRadius / distance, 2.0f)
+                                     ? (light.linearRadius / distance) * (light.linearRadius / distance)
                                      : 1.0f;
 
-            Color emitted = hit.material->emittedColor(hit.surfacePoint);
+            Color emitted = hit.material->emittedColor(Vec2(0.0f, 0.0f));
             Vec3 inDir2 = (light.position - hit.worldPoint).normalize();
             Vec3 outDir = -ray.direction.normalize();
 
             float thetaIn = std::acos(std::clamp(dot(hit.normal, inDir2), -1.0f, 1.0f));
             float thetaOut = std::acos(std::clamp(dot(hit.normal, outDir), -1.0f, 1.0f));
 
-            Color brdf = hit.material->eval(hit.surfacePoint, thetaIn, thetaOut);
+            Color brdf = hit.material->eval(Vec2(0.0f, 0.0f), thetaIn, thetaOut);
+
 
 
             resultColor = resultColor + (emitted + brdf) * light.color * cosTheta * distanceFactor;
