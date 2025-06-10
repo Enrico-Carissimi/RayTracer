@@ -1,5 +1,7 @@
 # HEAD
 
+- Fix missing tests for Shapes in CMakeLists
+
 # Version 0.2.0
 
 - Add demo command #8
