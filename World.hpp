@@ -13,7 +13,7 @@ struct PointLight {
     Color color;
     float linearRadius;
 
-    PointLight(const Point3& pos, const Color& col, float radius = 1.0f)
+    PointLight(const Point3& pos, const Color& col, float radius = 0.)
         : position(pos), color(col), linearRadius(radius) {}
 };
 
