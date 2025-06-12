@@ -64,7 +64,9 @@ auto PointLight = [](const Ray& ray, const World& world,
     if (!world.isHit(ray, hit))
         return world.backgroundColor;
 
-    Color resultColor = ambientColor;
+
+    Color emitted = hit.material->emittedColor(Vec2(0.0f, 0.0f));
+    Color resultColor = ambientColor + emitted;
 
     for (const auto& light : world.pointLights) {
         if (world.isPointVisible(light.position, hit.worldPoint)) {
@@ -78,7 +80,6 @@ auto PointLight = [](const Ray& ray, const World& world,
                                      ? (light.linearRadius / distance) * (light.linearRadius / distance)
                                      : 1.0f;
 
-            Color emitted = hit.material->emittedColor(Vec2(0.0f, 0.0f));
             Vec3 inDir2 = (light.position - hit.worldPoint).normalize();
             Vec3 outDir = -ray.direction.normalize();
 
@@ -87,9 +88,7 @@ auto PointLight = [](const Ray& ray, const World& world,
 
             Color brdf = hit.material->eval(Vec2(0.0f, 0.0f), thetaIn, thetaOut);
 
-
-
-            resultColor = resultColor + (emitted + brdf) * light.color * cosTheta * distanceFactor;
+            resultColor += brdf * light.color * cosTheta * distanceFactor;
         }
     }
 
