@@ -1,3 +1,6 @@
+#ifndef __renderers__
+#define __renderers__
+
 #include "World.hpp"
 #include <algorithm>
 
@@ -10,7 +13,7 @@ auto OnOff = [](const Ray& ray, const World& world) {
 
 auto Flat = [](const Ray& ray, const World& world) {
     HitRecord rec;
-    return world.isHit(ray, rec) ? rec.material->color(rec.surfacePoint) : Color(0., 0., 0.);
+    return world.isHit(ray, rec) ? rec.material->color(rec.surfacePoint) : world.backgroundColor;
 };
 
 auto PathTracer = [](const Ray& ray, const World& world, PCG& pcg, int nRays = 8,
@@ -59,43 +62,42 @@ auto PathTracer = [](const Ray& ray, const World& world, PCG& pcg, int nRays = 8
 };
 
 auto PointLight = [](const Ray& ray, const World& world,
-                     Color ambientColor = Color(0.1, 0.1, 0.1)) {
+                     const Color& ambientColor = Color(0.1, 0.1, 0.1)) {
     HitRecord hit;
     if (!world.isHit(ray, hit))
         return world.backgroundColor;
-
 
     Color emitted = hit.material->emittedColor(Vec2(0.0f, 0.0f));
     Color resultColor = ambientColor + emitted;
 
     for (const auto& light : world.pointLights) {
-        if (world.isPointVisible(light.position, hit.worldPoint)) {
-            Vec3 distanceVec = hit.worldPoint - light.position;
-            float distance = distanceVec.norm();
-            Vec3 inDir = distanceVec / distance; // normalize
+        if (!world.isPointVisible(light.position, hit.worldPoint))
+            continue;
 
-            float cosTheta = std::max(0.0f, dot(hit.normal.normalize(), -inDir));
+        Vec3 distanceVec = hit.worldPoint - light.position;
+        float distance = distanceVec.norm();
+        Vec3 inDir = distanceVec / distance; // normalize
 
-            float distanceFactor = (light.linearRadius > 0.0f)
-                                     ? (light.linearRadius / distance) * (light.linearRadius / distance)
-                                     : 1.0f;
+        float cosTheta = std::max(0.0f, dot(hit.normal.normalize(), -inDir));
 
-            Vec3 inDir2 = (light.position - hit.worldPoint).normalize();
-            Vec3 outDir = -ray.direction.normalize();
+        float distanceFactor = (light.linearRadius > 0.0f)
+                               ? (light.linearRadius / distance) * (light.linearRadius / distance)
+                               : 1.0f;
 
-            float thetaIn = std::acos(std::clamp(dot(hit.normal, inDir2), -1.0f, 1.0f));
-            float thetaOut = std::acos(std::clamp(dot(hit.normal, outDir), -1.0f, 1.0f));
+        Vec3 inDir2 = (light.position - hit.worldPoint).normalize();
+        Vec3 outDir = -ray.direction.normalize();
 
-            Color brdf = hit.material->eval(Vec2(0.0f, 0.0f), thetaIn, thetaOut);
+        float thetaIn = std::acos(dot(hit.normal.normalize(), inDir2));
+        float thetaOut = std::acos(dot(hit.normal.normalize(), outDir));
 
-            resultColor += brdf * light.color * cosTheta * distanceFactor;
-        }
+        Color brdf = hit.material->eval(Vec2(hit.surfacePoint), thetaIn, thetaOut);
+
+        resultColor += brdf * light.color * cosTheta * distanceFactor;
     }
 
     return resultColor;
 };
 
-
 }
 
-
+#endif
