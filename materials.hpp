@@ -75,9 +75,6 @@ public:
     virtual Color eval(const Vec2& uv, float thetaIn, float thetaOut) const = 0;
     virtual Ray scatterRay(PCG& pcg, const Vec3& incomingDir, const Point3& interactionPoint,
                            const Normal3& normal, int depth) const = 0;
-    virtual Color emittedRadiance(Vec2 uv) const { // remove?
-        return Color(0.0f, 0.0f, 0.0f);
-    }
 
 protected:
     std::shared_ptr<Texture> _texture;
@@ -125,7 +122,7 @@ public:
     };
 
     Ray scatterRay(PCG& pcg, const Vec3& incomingDir, const Point3& interactionPoint,
-                    const Normal3& normal, int depth) const override {
+                   const Normal3& normal, int depth) const override {
         Vec3 rayDir = incomingDir.normalize();
         Vec3 norm(normal.x, normal.y, normal.z);
         norm = norm.normalize();
