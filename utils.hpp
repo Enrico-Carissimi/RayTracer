@@ -87,6 +87,4 @@ void createONB(const T &n, T &b1, T &b2) {
     b2 = T(b, sign + n.y * n.y * a, -n.y);
 }
 
-
-
 #endif
