@@ -1,5 +1,7 @@
 # HEAD
 
+- Add anti-aliasing #9
+- Add path tracing and point light rendering algorithms #9
 - Fix missing tests for Shapes in CMakeLists
 
 # Version 0.2.0
