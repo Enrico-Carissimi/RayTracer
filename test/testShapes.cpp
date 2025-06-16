@@ -4,6 +4,8 @@
 
 using std::cout, std::endl;
 
+auto bufferMaterial = std::make_shared<DiffuseMaterial>(DiffuseMaterial());
+
 // tests for sphere
 namespace sphere {
 
@@ -46,7 +48,7 @@ void testInnerHit() {
 }
 
 void testTransformation() {
-    Sphere sphere(translation(Vec3(10., 0., 0.)));
+    Sphere sphere(bufferMaterial, translation(Vec3(10., 0., 0.)));
     HitRecord rec;
 
     Ray ray1 = Ray(Point3(10., 0., 2.), -Vec3(0., 0., 1.));
@@ -71,7 +73,7 @@ void testTransformation() {
 }
 
 void testNormals() {
-    Sphere sphere(scaling(Vec3(2., 1., 1.)));
+    Sphere sphere(bufferMaterial, scaling(Vec3(2., 1., 1.)));
     Ray ray(Point3(1., 1., 0.), Vec3(-1., -1., 0.));
     HitRecord rec;
     sphere.isHit(ray, rec);
@@ -83,7 +85,7 @@ void testNormals() {
 
 void testNormalDirection() {
     // scaling a sphere by -1 keeps the sphere the same but reverses its reference frame
-    Sphere sphere(scaling(Vec3(-1., -1., -1.)));
+    Sphere sphere(bufferMaterial, scaling(Vec3(-1., -1., -1.)));
     Ray ray(Point3(0., 2., 0.), -Vec3(0., 1., 0.));
     HitRecord rec;
     sphere.isHit(ray, rec);
@@ -177,7 +179,7 @@ void testHit() {
 }
 
 void testTransformation() {
-    Plane plane(rotation(90., Axis::Y));
+    Plane plane(bufferMaterial, rotation(90., Axis::Y));
     HitRecord rec;
 
     Ray ray1(Point3(1., 0., 0.), -Vec3(1., 0., 0.));
@@ -227,8 +229,8 @@ auto testHit() {
     World world;
     HitRecord rec;
 
-    Sphere sphere1(translation(2., 0., 0.));
-    Sphere sphere2(translation(8., 0., 0.));
+    Sphere sphere1(bufferMaterial, translation(2., 0., 0.));
+    Sphere sphere2(bufferMaterial, translation(8., 0., 0.));
     world.addShape(std::make_shared<Sphere>(sphere1));
     world.addShape(std::make_shared<Sphere>(sphere2));
 
@@ -244,8 +246,8 @@ auto testHit() {
 void testQuickHit() {
     World world;
 
-    Sphere sphere1(translation(2., 0., 0.));
-    Sphere sphere2(translation(8., 0., 0.));
+    Sphere sphere1(bufferMaterial, translation(2., 0., 0.));
+    Sphere sphere2(bufferMaterial, translation(8., 0., 0.));
     world.addShape(std::make_shared<Sphere>(sphere1));
     world.addShape(std::make_shared<Sphere>(sphere2));
 

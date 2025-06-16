@@ -6,13 +6,21 @@
 #include "shapes.hpp"
 #include "Ray.hpp"
 #include "HitRecord.hpp"
-//#include "PointLight.hpp"
 #include "Point3.hpp"
+
+struct PointLight {
+    Point3 position;
+    Color color;
+    float linearRadius;
+
+    PointLight(const Point3& pos, const Color& col, float radius = 0.)
+        : position(pos), color(col), linearRadius(radius) {}
+};
 
 class World {
 public:
-    
-    //std::vector<PointLight> pointLights;         // Lista di luci
+    Color backgroundColor;
+    std::vector<PointLight> pointLights;
 
     World() = default;
 
@@ -20,12 +28,11 @@ public:
         _shapes.push_back(shape);
     }
 
-    // Metodo per aggiungere una luce al mondo
-    //void add_light(const PointLight& light) {
-        //point_lights.push_back(light);
-    //}
+    void addLight(const PointLight& light) {
+        pointLights.push_back(light);
+    }
 
-    bool isHit(const Ray& ray, HitRecord& rec) {
+    bool isHit(const Ray& ray, HitRecord& rec) const {
         bool hit = false;
         float closest = ray.tmax;
     
@@ -48,7 +55,7 @@ public:
     }
     
     
-    bool isPointVisible(const Point3& point, const Point3& observerPos) {
+    bool isPointVisible(const Point3& point, const Point3& observerPos) const {
         Vec3 direction = point - observerPos;
         float dirNorm = direction.norm();
 

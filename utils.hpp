@@ -9,6 +9,7 @@
 #include <limits>
 
 #define PI 3.1415926535897932385
+const float INF = std::numeric_limits<float>::infinity();
 
 
 
@@ -74,5 +75,16 @@ public:
 
     }
 };
+
+// from https://graphics.pixar.com/library/OrthonormalB/paper.pdf
+// n must be normalized
+template<typename T>
+void createONB(const T &n, T &b1, T &b2) {
+    float sign = copysignf(1.0f, n.z);
+    const float a = -1.0f / (sign + n.z);
+    const float b = n.x * n.y * a;
+    b1 = T(1.0f + sign * n.x * n.x * a, sign * b, -sign * n.x);
+    b2 = T(b, sign + n.y * n.y * a, -n.y);
+}
 
 #endif

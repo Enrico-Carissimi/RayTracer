@@ -1,34 +1,28 @@
 #include "Camera.hpp"
 #include "World.hpp"
+#include "renderers.hpp"
 #include "lib/CLI11.hpp"
 
+using std::shared_ptr, std::make_shared;
+
 // Demo command to generate an example image
-void demo(std::string output, float angle) {
-    Camera camera("perspective", 4. / 3., 400, 1., rotation(angle, Axis::Z) * translation(-1., 0., 0.));
+void demo(std::string output, int nRays, int maxDepth, int russianRouletteLimit, int AAsamples, float angle) {
+    Camera camera("perspective", 4. / 3., 640, 1., rotation(angle, Axis::Z) * translation(-1., 0., 0.));
     World world;
 
-    int nSpheres = 10;
-    Vec3 positions[] = {
-        Vec3{-0.5, -0.5, -0.5},
-        Vec3{-0.5, -0.5, 0.5},
-        Vec3{-0.5, 0.5, -0.5},
-        Vec3{0.5, -0.5, -0.5},
-        Vec3{-0.5, 0.5, 0.5},
-        Vec3{0.5, -0.5, 0.5},
-        Vec3{0.5, 0.5, -0.5},
-        Vec3{0.5, 0.5, 0.5},
-        Vec3{0., 0., -0.5},
-        Vec3{0., 0.5, 0.}
-    };
-    
-    for (int i = 0; i < nSpheres; i++) {
-        world.addShape(std::make_shared<Sphere>(Sphere(translation(positions[i]) * scaling(0.1))));
-    }
+    auto material = make_shared<DiffuseMaterial>(make_shared<UniformTexture>(Color(1., 0.5, 0.3)));
+    auto skyMaterial = make_shared<DiffuseMaterial>(make_shared<UniformTexture>(Color()), make_shared<UniformTexture>(Color(1., 1., 1.)));
+    auto reflectMaterial = make_shared<SpecularMaterial>(make_shared<UniformTexture>(Color(0.1, 0.9, 0.4)), make_shared<UniformTexture>(Color()), 1.);
+    auto floorMaterial = make_shared<DiffuseMaterial>(make_shared<CheckeredTexture>(Color(0., 1., 1.), Color(1., 0., 1.), 4));
 
-    camera.castAll([&world](Ray ray){
-        HitRecord rec;
-        return world.isHit(ray, rec) ? Color(1., 1., 1.) : Color(0., 0., 0.); 
-    });
+    world.addShape(make_shared<Sphere>(material, translation(0., 0., -0.2) * scaling(0.8)));
+    world.addShape(make_shared<Sphere>(skyMaterial, translation(0., 0., 0.) * scaling(1000.)));
+    world.addShape(make_shared<Sphere>(reflectMaterial, translation(1., 2., -0.9)));
+    world.addShape(make_shared<Plane>(floorMaterial, translation(0., 0., -1.)));
+
+    
+
+    camera.render(Renderers::PathTracer, AAsamples, world, camera.pcg, nRays, maxDepth, russianRouletteLimit);
     camera.image.save("demo.pfm");
     camera.image.normalize(1.);
     camera.image.clamp();
@@ -53,10 +47,15 @@ int main(int argc, char* argv[]) {
     // Demo Command
     std::string demoOutput = "demo.png";
     float angle = 0.0f;
+    int nRays = 3, maxDepth = 5, russianRouletteLimit = 3, AAsamples = 4;
 
     auto demoCommand = app.add_subcommand("demo", "Generate a demo ray-traced image, this always saves a \"demo.pfm\" image");
     demoCommand->add_option("output,-o,--output", demoOutput, "Output file for the demo .png or .jpeg image");
+    demoCommand->add_option("-A,--AA-samples", AAsamples, "Number of samples per pixel used for anti-aliasing");
     demoCommand->add_option("--angle", angle, "Angle of the rotation around the Z axis, in degrees");
+    demoCommand->add_option("-n,--ray-number", nRays, "Path tracer only, number of rays sent from every hit point");
+    demoCommand->add_option("-d,--max-depth", maxDepth, "Path tracer only, maximum ray depth");
+    demoCommand->add_option("-r,--rr-limit", russianRouletteLimit, "Path tracer only, ray depth where russian roulette starts");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -69,7 +68,7 @@ int main(int argc, char* argv[]) {
         image.save(outputFile, gamma);
     }
     else if (*demoCommand) {
-        demo(demoOutput, angle);
+        demo(demoOutput, nRays, maxDepth, russianRouletteLimit, AAsamples, angle);
     }
     else {
         std::cout << "Program usage: " << argv[0] << " [demo or convert]\n"

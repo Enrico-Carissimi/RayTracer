@@ -1,11 +1,14 @@
 #ifndef __Camera__
 #define __Camera__
 
+#include <utility>
+
 #include "Point3.hpp"
 #include "Vec3.hpp"
 #include "Transformation.hpp"
 #include "HDRImage.hpp"
 #include "Ray.hpp"
+#include "World.hpp"
 
 
 
@@ -31,13 +34,14 @@ public:
     float aspectRatio;
     Transformation transformation;
     HDRImage image;
+    PCG pcg;
 
     // use type = "orthogonal" or "perspective" to use orthogonal or perspective camera projections
     // distance is the distance between the camera and the image (perspective only)
     // move the camera with a transfomation
-    Camera(std::string type, float aspectRatio, int imageWidth, float distance = 1.0f, Transformation transformation = Transformation()) :
+    Camera(std::string type, float aspectRatio, int imageWidth, float distance = 1.0f, Transformation transformation = Transformation(), PCG pcg = PCG()) :
     aspectRatio(aspectRatio), imageWidth(imageWidth), imageHeight(imageWidth / aspectRatio),
-    transformation(transformation), image(imageWidth, imageHeight) {
+    transformation(transformation), image(imageWidth, imageHeight), pcg(pcg) {
         if (type == "orthogonal"){
             _castRay = _castOrthogonal;
             _distance = 1.0f;
@@ -63,20 +67,74 @@ public:
     }
 
     // casts rays to every pixel of the image and computes their color using a renderer
-    template <typename Function>
-    void castAll(Function renderer) { // maybe rename to "render"?
+    template <typename Function, typename... Args>
+    void render(const Function& renderer, int AASamples, Args&&... args) { // first arg should be the world
+        int AASamplesRoot = std::round(std::sqrt(AASamples));
+        bool squareAA = (AASamplesRoot * AASamplesRoot == AASamples);
+
+        auto start = std::chrono::steady_clock::now();
+
         for (int j = 0; j < imageHeight; j++) {
+            std::cout << "\rdrawing row " << j + 1 << "/" << imageHeight << std::flush;
+
             for (int i = 0; i < imageWidth; i++) {
-                Ray ray = castRay(i, j);
-                Color pixelColor = renderer(ray);
-                image.setPixel(i, j, pixelColor);
+
+                // no antialiasing
+                if (AASamples == 1) {
+                    image.setPixel(i, j, samplePixel(i, j, 0.5, 0.5, renderer, args...));
+                    continue;
+                }
+
+                // antialiasing
+                if (!squareAA) {                                         // non-square number of samples
+                    antialiasing(i, j, AASamples, renderer, args...);
+                } else {                                                 // square number of samples
+                    stratifiedSampling(i, j, AASamplesRoot, renderer, args...);
+                }
             }
         }
+
+        auto end = std::chrono::steady_clock::now();
+
+        std::cout << "\rimage drawn in " << std::fixed << std::setprecision(2)
+                  << std::chrono::duration<float>(end - start).count() << " s                 " << std::endl;
     }
 
 private:
     float _distance;
     _CastRay* _castRay;
+
+    template <typename Function, typename... Args>
+    Color samplePixel(int i, int j, float uPixel, float vPixel, const Function& renderer, Args&&... args) {
+        Ray ray = castRay(i, j, uPixel, vPixel);
+        return renderer(ray, std::forward<Args>(args)...); // c++ magic
+    }
+
+    template <typename Function, typename... Args>
+    void antialiasing(int i, int j, int AASamples, const Function& renderer, Args&&... args) {
+        Color sum;
+
+        for (int aa = 0; aa < AASamples; aa++) {
+            sum += samplePixel(i, j, pcg.random(), pcg.random(), renderer, std::forward<Args>(args)...);
+        }
+
+        image.setPixel(i, j, sum * (1. / AASamples));
+    }
+
+    template <typename Function, typename... Args>
+    void stratifiedSampling(int i, int j, int side, const Function& renderer, Args&&... args) {
+        Color sum;
+        
+        for (int jPixel = 0; jPixel < side; jPixel++) {
+            for (int iPixel = 0; iPixel < side; iPixel++) {
+                float uPixel = (iPixel + pcg.random()) / side, vPixel = (jPixel + pcg.random()) / side;
+
+                sum += samplePixel(i, j, uPixel, vPixel, renderer, std::forward<Args>(args)...);
+            }
+        }
+
+        image.setPixel(i, j, sum * (1. / (side * side)));
+    }
 };
 
 #endif
