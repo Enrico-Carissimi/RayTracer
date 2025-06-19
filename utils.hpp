@@ -31,6 +31,13 @@ bool areClose(const T1& v, const T1& u, float epsilon = 1e-5f) {
     return (areClose(v.x, u.x, epsilon) && areClose(v.y, u.y, epsilon) && areClose(v.z, u.z, epsilon));
 }
 
+// utilities for the lexer
+bool isCharSkippable(const char& c) {
+    return (c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '#');
+}
+
+
+
 /**
  * @brief Simple assert function to avoid using the standard one.
  * 
@@ -47,6 +54,27 @@ void sassert(bool expr, const std::source_location loc = std::source_location::c
         exit(-1);
     }
 }
+
+/**
+ * @brief tests if an exception is thrown by a function with the specified parameter
+ * 
+ * if the function accepts more parameters, or if it is a constructor, use a lambda:
+ * testException(parameter, [](Parameter p) -> {return function(p, [...]);});
+ * 
+ * @tparam Parameter 
+ * @tparam Function 
+ * @param parameter parameter to pass to the function
+ * @param function the function throwing the exeption to test
+ */
+template<typename Parameter, typename Function>
+void testException(Parameter& parameter, Function function) {
+    bool exceptionThrown = false;
+    try{function(parameter);}
+    catch(std::exception& e){exceptionThrown = true;}
+    sassert(exceptionThrown);
+}
+
+
 
 class PCG {
 public:
@@ -76,6 +104,8 @@ public:
     }
 };
 
+
+
 // from https://graphics.pixar.com/library/OrthonormalB/paper.pdf
 // n must be normalized
 template<typename T>
@@ -86,5 +116,7 @@ void createONB(const T &n, T &b1, T &b2) {
     b1 = T(1.0f + sign * n.x * n.x * a, sign * b, -sign * n.x);
     b2 = T(b, sign + n.y * n.y * a, -n.y);
 }
+
+
 
 #endif
