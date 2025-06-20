@@ -3,7 +3,7 @@ name: CMake on multiple platforms
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: [ ]
   pull_request:
     branches: [ "main" ]
 

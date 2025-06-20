@@ -113,6 +113,18 @@ struct Token {
     TokenTags tag;
     TokenUnion value;
     SourceLocation location;
+
+    Token(TokenTags tag, Keywords k, SourceLocation location)
+        :tag(tag), value(k), location(location) {}
+
+    Token(TokenTags tag, const std::string& string, SourceLocation location)
+        :tag(tag), value(string), location(location) {}
+
+    Token(TokenTags tag, float numberLiteral, SourceLocation location)
+        :tag(tag), value(numberLiteral), location(location) {}
+
+    Token(TokenTags tag, const char& symbol, SourceLocation location)
+        :tag(tag), value(symbol), location(location) {}
 };
 
 
@@ -275,7 +287,7 @@ private:
             value += c;
         }
 
-        return Token(TokenTags::STRING_LITERAL, TokenUnion(value), location);
+        return Token(TokenTags::STRING_LITERAL, value, location);
     }
 
     Token readNumberToken(SourceLocation location) {
@@ -296,7 +308,7 @@ private:
         // we should also check if there are multiple 'e' or 'E' characters, and enable negative powers
         if (std::to_string(number) != value) throw GrammarError(location, value + " is not a valid number");
 
-        return Token(TokenTags::NUMBER_LITERAL, TokenUnion(number), location);
+        return Token(TokenTags::NUMBER_LITERAL, number, location);
     }
 };
 
