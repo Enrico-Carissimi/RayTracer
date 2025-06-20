@@ -206,6 +206,7 @@ public:
             _savedChar.reset();
         } else {
             _stream.get(c); // we could skip whitespaces here
+            if (_stream.eof()) c = '\0'; // cross-platform support I guess? Not needed on windows with g++
         }
         
         _savedLocation = _location;
