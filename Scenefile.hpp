@@ -125,6 +125,42 @@ struct Token {
 
     Token(TokenTags tag, const char& symbol, SourceLocation location)
         :tag(tag), value(symbol), location(location) {}
+
+    Token(const Token& other) {*this = other;}
+
+    Token& operator=(const Token& other) {
+        tag = other.tag;
+        location = other.location;
+
+        switch (tag) {
+            case TokenTags::KEYWORD:
+                value.keyword = other.value.keyword;
+                break;
+            case TokenTags::IDENTIFIER:
+                value.string = other.value.string;
+                break;
+            case TokenTags::STRING_LITERAL:
+                new(&value.string) std::string(other.value.string);
+                break;
+            case TokenTags::NUMBER_LITERAL:
+                value.numberLiteral = other.value.numberLiteral;
+                break;
+            case TokenTags::SYMBOL:
+                value.symbol = other.value.symbol;
+                break;
+            case TokenTags::STOP:
+                value.symbol = other.value.symbol;
+                break;
+            }
+        return *this;
+    }
+
+    ~Token() {
+        if (tag == TokenTags::IDENTIFIER || tag == TokenTags::STRING_LITERAL) {
+            value.string.~basic_string();
+        }
+    }
+
 };
 
 
@@ -209,7 +245,7 @@ public:
      * @brief Reads a token from the stream (keyword, variable identifier, string or number literal, symbol, or EOF)
      * 
      * @return Token 
-     */
+    */
     Token readToken () {
         _skipWsAndComments();
         char c = peek();
@@ -227,6 +263,9 @@ public:
         else if (isalpha(c)) return readIdentifierOrKeyword(tokenLocation);
         else throw GrammarError(_location, "invalid character '" + std::string{read()} + "'");
     }
+        
+
+    
 
     SourceLocation _location;
 
@@ -243,12 +282,22 @@ public:
         unread(c);                       // unread the last, non-skippable, char read
     }
 
+    void unreadToken(const Token& token) {
+        if (_savedToken.has_value()) {
+            std::cout << "ERROR: there's already an unread token" << std::endl;
+            exit(-1);
+        }
+        _savedToken = token;
+    }
+
+
 private:
     int _tabs;
     std::istream& _stream;
     std::optional<char> _savedChar;
     SourceLocation _savedLocation;
     bool _peeking = false;
+    std::optional<Token> _savedToken;
 
     void updateLocation(const char& c) {
         if (c == '\0') return; // EOF, nothing to do
