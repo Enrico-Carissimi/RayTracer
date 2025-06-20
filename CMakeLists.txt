@@ -43,6 +43,9 @@ target_link_libraries(TestTextures PUBLIC compilerFlags)
 add_executable(TestRenderers test/testRenderers.cpp)
 target_link_libraries(TestRenderers PUBLIC compilerFlags)
 
+add_executable(TestScenefile test/testScenefile.cpp)
+target_link_libraries(TestScenefile PUBLIC compilerFlags)
+
 # testing
 enable_testing()
 add_test(NAME Color COMMAND TestColor)
@@ -55,3 +58,4 @@ add_test(NAME Shapes COMMAND TestShapes)
 add_test(NAME PCG COMMAND TestPCG)
 add_test(NAME textures COMMAND TestTextures)
 add_test(NAME renderers COMMAND TestRenderers)
+add_test(NAME scenefile COMMAND TestScenefile)
