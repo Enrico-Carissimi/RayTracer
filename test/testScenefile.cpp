@@ -136,14 +136,125 @@ void testThrowGrammarError() {
     testException(stream, [](InputStream& s) {s.readToken();}); // ?
     sassert(isIdentifier(stream.readToken(), "ew")); // ew (identifier)
 
-    std::istringstream ss2;
-    ss2.str("1.2.3\n7e8888888");
-    InputStream stream2(ss2, 0);
+    std::istringstream ss2, ss3, ss4; // multiple streams
+    ss2.str("1.2.3");                 // since we interrupt
+    ss3.str("7e8888888");             // reading before the
+    ss4.str("1.e3E2");                // token ends
+    InputStream stream2(ss2, 0), stream3(ss3, 0), stream4(ss4, 0);
 
     testException(stream2, [](InputStream& s) {s.readToken();}); // two dots
-    testException(stream2, [](InputStream& s) {s.readToken();}); // too big
+    testException(stream3, [](InputStream& s) {s.readToken();}); // too big
+    testException(stream4, [](InputStream& s) {s.readToken();}); // two exponentials
 
     cout << "grammar errors are handled correctly" << endl;
+}
+
+void testParser() {
+    std::istringstream ss;
+    ss.str(
+        "float clock(150)\n\n"
+
+        "material sky_material(\n"
+        "    diffuse(\n"
+        "        uniform(<0, 0, 0>),\n"
+        "        uniform(<0.7, 0.5, 1>)\n"
+        "    )\n"
+        ")\n\n"
+
+        "# Here is a comment\n\n"
+
+        "material ground_material(\n"
+        "    diffuse(checkered(<0.3, 0.5, 0.1>,\n"
+        "                        <0.1, 0.2, 0.5>, 4),\n"
+        "    uniform(<0, 0, 0>))\n"
+        ")\n\n"
+
+        "material sphere_material(\n"
+        "    specular(uniform(<0.5, 0.5, 0.5>),\n"
+        "    uniform(<0, 0, 0>))\n"
+        ")\n\n"
+
+        "plane (sky_material, translation([0, 0, 100]) * rotationY(clock))\n"
+        "plane (ground_material, identity)\n\n"
+
+        "sphere(sphere_material, translation([0, 0, 1]))\n\n"
+
+        "camera(perspective, 1.0, 100, 2.0, rotationZ(30) * translation([-4, 0, 1]))\n\n"
+
+        "pointLight([1., 1., 1.], <0., 0.1, 4>, 2)"
+    );
+    InputStream stream(ss, "testfile.fake");
+
+    Scene scene;
+    scene.parseScene(stream);
+
+    // float variables
+    sassert(scene.floatVariables.size() == 1);
+    sassert(scene.floatVariables.find("clock") != scene.floatVariables.end());
+    sassert(scene.floatVariables["clock"] == 150.);
+
+    // materials
+    sassert(scene.materials.size() == 3);
+    sassert(scene.materials.find("sphere_material") != scene.materials.end());
+    sassert(scene.materials.find("sky_material") != scene.materials.end());
+    sassert(scene.materials.find("ground_material") != scene.materials.end());
+
+    auto sphereMaterial = scene.materials["sphere_material"];
+    auto skyMaterial = scene.materials["sky_material"];
+    auto groundMaterial = scene.materials["ground_material"];
+
+    sassert(skyMaterial->color({0., 0.}).isClose(Color(0., 0., 0.)));
+
+    sassert(groundMaterial->color({0., 0.}).isClose(Color(0.3, 0.5, 0.1)));
+    sassert(groundMaterial->color({0.2501, 0.}).isClose(Color(0.1, 0.2, 0.5))); // 0.2501 instead of 0.25 just to be sure...
+
+    sassert(sphereMaterial->color({0., 0.}).isClose(Color(0.5, 0.5, 0.5)));
+
+    sassert(skyMaterial->emittedColor({0., 0.}).isClose(Color(0.7, 0.5, 1.)));
+    sassert(groundMaterial->emittedColor({0., 0.}).isClose(Color(0., 0., 0.)));
+    sassert(sphereMaterial->emittedColor({0., 0.}).isClose(Color(0, 0, 0)));
+
+    // shapes
+    sassert(scene.world._shapes.size() == 3);
+    sassert(scene.world._shapes[0]->transformation.isClose(translation(Vec3(0., 0., 100.)) * rotation(150., Axis::Y)));
+    sassert(scene.world._shapes[1]->transformation.isClose(Transformation()));
+    sassert(scene.world._shapes[2]->transformation.isClose(translation(Vec3(0., 0., 1.))));
+
+    // camera
+    sassert(scene.camera->transformation.isClose(rotation(30., Axis::Z) * translation(Vec3(-4., 0., 1.))));
+    sassert(areClose(scene.camera->aspectRatio, 1.));
+    sassert(areClose((float) scene.camera->imageWidth, 100.));
+
+    // pointLight
+    PointLight p = scene.world.pointLights[0];
+    sassert(p.color.isClose(Color(0., 0.1, 4.)));
+    sassert(p.position.isClose(Point3(1., 1., 1.)));
+    sassert(areClose(p.linearRadius, 2.));
+
+    cout << "parser works" << endl;
+}
+
+void testUndefinedMaterial() {
+    std::istringstream ss;
+    ss.str("plane(this_material_does_not_exist, identity");
+    InputStream stream(ss, 0);
+
+    testException(stream, [](InputStream s){ Scene scene; scene.parseScene(s); });
+
+    cout << "undefined materials are handled correctly" << endl;
+}
+
+void testDoubleCamera() {
+    std::istringstream ss;
+    ss.str(
+        "camera(perspective, rotationZ(30) * translation([-4, 0, 1]), 1.0, 1.0)\n"
+        "camera(orthogonal, identity, 1.0, 1.0)"
+    );
+    InputStream stream(ss, 0);
+
+    testException(stream, [](InputStream s){ Scene scene; scene.parseScene(s); });
+
+    cout << "second camera is handled correctly" << endl;
 }
 
 
@@ -153,6 +264,10 @@ int main() {
     testInputStream();
     testLexer();
     testThrowGrammarError();
+
+    testParser();
+    testUndefinedMaterial();
+    testDoubleCamera();
 
     return 0;
 }
