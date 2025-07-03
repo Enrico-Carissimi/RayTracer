@@ -7,7 +7,6 @@
 #include <sstream>
 #include <optional>
 #include <unordered_map>
-#include <map>
 #include <memory>
 #include <set>
 
@@ -16,9 +15,7 @@
 #include "Vec3.hpp"
 #include "Transformation.hpp"
 #include "shapes.hpp"
-#include "renderers.hpp"
 #include "materials.hpp"
-#include "PFMreader.hpp"
 #include "Camera.hpp"
 #include "Color.hpp"
 
@@ -50,15 +47,14 @@ public:
     int column;
 
     SourceLocation(int fileIndex = -1, int line = 0, int col = 0)
-        : _fileIndex(fileIndex), line(line), column(col) {}
+        : line(line), column(col), _fileIndex(fileIndex) {}
 
-    const std::string& fileName() const {
-        return _fileIndex >= 0 ? FileRegistry::getFile(_fileIndex) : empty;
+    std::string fileName() const {
+        return _fileIndex >= 0 ? FileRegistry::getFile(_fileIndex) : "";
     }
 
 private:
     int _fileIndex; // index into FileRegistry
-    inline static const std::string empty = "";
 };
 
 
@@ -73,7 +69,7 @@ enum class Keywords {
     ROTATION_X, ROTATION_Y, ROTATION_Z,
     SCALING,
     CAMERA, ORTHOGONAL, PERSPECTIVE, // cameras
-    SPHERE, PLANE, // shapes
+    SPHERE, PLANE, POINT_LIGHT, // shapes
     MATERIAL,
     UNIFORM, CHECKERED, IMAGE, // textures
     DIFFUSE, SPECULAR // materials
@@ -93,12 +89,44 @@ const std::unordered_map<std::string, Keywords> KEYWORDS {
     {"perspective", Keywords::PERSPECTIVE},
     {"sphere", Keywords::SPHERE},
     {"plane", Keywords::PLANE},
+    {"pointLight", Keywords::POINT_LIGHT},
     {"material", Keywords::MATERIAL},
     {"uniform", Keywords::UNIFORM},
     {"checkered", Keywords::CHECKERED},
     {"image", Keywords::IMAGE},
     {"diffuse", Keywords::DIFFUSE},
     {"specular", Keywords::SPECULAR}
+};
+
+// from https://stackoverflow.com/questions/18837857/cant-use-enum-class-as-unordered-map-key
+struct _EnumClassHash {     // we need a custom hash functin to use
+    template <typename T>   // user defined data as map keys
+    std::size_t operator()(T t) const {
+        return static_cast<std::size_t>(t);
+    }
+};
+
+const std::unordered_map<Keywords, std::string, _EnumClassHash> INVERSE_KEYWORDS {
+    {Keywords::NEW, "new"},
+    {Keywords::FLOAT, "float"},
+    {Keywords::IDENTITY, "identity"},
+    {Keywords::TRANSLATION, "translation"},   
+    {Keywords::ROTATION_X, "rotationX"},
+    {Keywords::ROTATION_Y, "rotationY"},
+    {Keywords::ROTATION_Z, "rotationZ"},
+    {Keywords::SCALING, "scaling"},
+    {Keywords::CAMERA, "camera"},
+    {Keywords::ORTHOGONAL, "orthogonal"},
+    {Keywords::PERSPECTIVE, "perspective"},
+    {Keywords::SPHERE, "sphere"},
+    {Keywords::PLANE, "plane"},
+    {Keywords::POINT_LIGHT, "pointLight"},
+    {Keywords::MATERIAL, "material"},
+    {Keywords::UNIFORM, "uniform"},
+    {Keywords::CHECKERED, "checkered"},
+    {Keywords::IMAGE, "image"},
+    {Keywords::DIFFUSE, "diffuse"},
+    {Keywords::SPECULAR, "specular"}
 };
 
 enum class TokenTags {
@@ -125,16 +153,16 @@ struct Token {
     SourceLocation location;
 
     Token(TokenTags tag, Keywords k, SourceLocation location)
-        :tag(tag), value(k), location(location) {}
+        : tag(tag), value(k), location(location) {}
 
     Token(TokenTags tag, const std::string& string, SourceLocation location)
-        :tag(tag), value(string), location(location) {}
+        : tag(tag), value(string), location(location) {}
 
     Token(TokenTags tag, float numberLiteral, SourceLocation location)
-        :tag(tag), value(numberLiteral), location(location) {}
+        : tag(tag), value(numberLiteral), location(location) {}
 
     Token(TokenTags tag, const char& symbol, SourceLocation location)
-        :tag(tag), value(symbol), location(location) {}
+        : tag(tag), value(symbol), location(location) {}
 
     Token(const Token& other) {*this = other;}
 
@@ -150,7 +178,7 @@ struct Token {
                 value.string = other.value.string;
                 break;
             case TokenTags::STRING_LITERAL:
-                new(&value.string) std::string(other.value.string);
+                value.string = other.value.string;
                 break;
             case TokenTags::NUMBER_LITERAL:
                 value.numberLiteral = other.value.numberLiteral;
@@ -166,11 +194,28 @@ struct Token {
     }
 
     ~Token() {
-        if (tag == TokenTags::IDENTIFIER || tag == TokenTags::STRING_LITERAL) {
+        if (tag == TokenTags::IDENTIFIER || tag == TokenTags::STRING_LITERAL)
             value.string.~basic_string();
-        }
     }
 
+    std::string toString() {
+        switch (tag) {
+            case TokenTags::KEYWORD:
+                return "<keyword>";
+            case TokenTags::IDENTIFIER:
+                return "\"" + value.string + "\"";
+            case TokenTags::STRING_LITERAL:
+                return "\"" + value.string + "\"";
+            case TokenTags::NUMBER_LITERAL:
+                return std::to_string(value.numberLiteral);
+            case TokenTags::SYMBOL:
+                return "'" + std::string(1, value.symbol) + "'";
+            case TokenTags::STOP:
+                return "<EOF>";
+            default:
+                return "<unknown>";
+        }
+    }
 };
 
 
@@ -200,50 +245,28 @@ private:
 class InputStream {
 public:
     InputStream(std::istream& stream, int fileIndex, int tabs = 4) // I'm writing in vscode with tab = 4 spaces
-        : _stream(stream), _location(fileIndex, 1, 1), _tabs(tabs), _savedLocation() {}
-    InputStream(std::istream& stream, std::string fileName, int tabs = 4)
-        : _stream(stream), _location(FileRegistry::registerFile(fileName), 1, 1), _tabs(tabs), _savedLocation() {}
+        : _location(fileIndex, 1, 1), _stream(stream), _tabs(tabs), _savedLocation() {}
+    InputStream(std::istream& stream, const std::string& fileName, int tabs = 4)
+        : _location(FileRegistry::registerFile(fileName), 1, 1), _stream(stream), _tabs(tabs), _savedLocation() {}
 
     /**
      * @brief Reads a character from the stream
      * 
      * @return char 
      */
-    char read() {
-        char c;
-        if (_savedChar.has_value()) {
-            c = _savedChar.value();
-            _savedChar.reset();
-        } else {
-            _stream.get(c); // we could skip whitespaces here
-            if (_stream.eof()) c = '\0'; // cross-platform support I guess? Not needed on windows with g++
-        }
-        
-        _savedLocation = _location;
-        updateLocation(c);
-        _peeking = false;
-
-        return c;
-    }
+    char read();
 
     /**
      * @brief Puts the last character read back in the stream
      * 
      * @param c the character to put back
      */
-    void unread(const char& c) {
-        if (_savedChar.has_value() && !_peeking) {
-            std::cout << "ERROR: there's already an unread character" << std::endl;
-            exit(-1);
-        }
-        _savedChar = c; // we could use _stream.putback(c) and avoid using _savedChar
-        _location = _savedLocation;
-    }
+    void unread(const char& c);
 
     /**
      * @brief Looks ahead one character without extracting it from the stream
      * 
-     * @return char 
+     * @return char
      */
     char peek() {
         char c = read(); // sets _peeking to false
@@ -257,42 +280,13 @@ public:
      * 
      * @return Token 
     */
-    Token readToken () {
-        _skipWsAndComments();
-        char c = peek();
+    Token readToken ();
 
-        if (c == '\0') return Token(TokenTags::STOP, '\0', _location); // EOF
-
-        SourceLocation tokenLocation = _location;
-
-        if (SYMBOLS.find(c) != std::string::npos) return Token(TokenTags::SYMBOL, read(), tokenLocation);
-        else if (c == '"') {
-            read(); // we need to skip the '"'
-            return readStringToken(tokenLocation);
-        }
-        else if (isdigit(c)) return readNumberToken(tokenLocation);
-        else if (isalpha(c)) return readIdentifierOrKeyword(tokenLocation);
-        else throw GrammarError(_location, "invalid character '" + std::string{read()} + "'");
-    }
-        
-
-    
-
-    SourceLocation _location;
-
-    void _skipWsAndComments() {
-        char c = read();
-        while (isCharSkippable(c)) {
-            if (c == '#') skipComment(); // skip to next line if there's a comment
-            
-            c = read();
-
-            if (c == '\0') return;       // EOF, nothing to do
-        }
-
-        unread(c);                       // unread the last, non-skippable, char read
-    }
-
+    /**
+     * @brief Puts the last token read back in the stream
+     * 
+     * @param token the token to put back
+     */
     void unreadToken(const Token& token) {
         if (_savedToken.has_value()) {
             std::cout << "ERROR: there's already an unread token" << std::endl;
@@ -300,11 +294,16 @@ public:
         }
         _savedToken = token;
     }
+    
 
+
+    SourceLocation _location;
+
+    void _skipWsAndComments();
 
 private:
-    int _tabs;
     std::istream& _stream;
+    int _tabs;
     std::optional<char> _savedChar;
     SourceLocation _savedLocation;
     bool _peeking = false;
@@ -323,253 +322,304 @@ private:
         while (c != '\n' && c != '\r' && c != '\0') c = read();
     }
 
-    Token readIdentifierOrKeyword(SourceLocation location) {
-        std::string value = "";
-
-        while (true) {
-            if (!isalnum(peek()) && peek() != '_') break; // we know the first char is't a number
-            value += read();
-        }
-
-        // if is not a keyword, return an identifier
-        try { return Token(TokenTags::KEYWORD, KEYWORDS.at(value), location); } // at() throws exception if the key is not present
-        catch (std::out_of_range& e) { return Token(TokenTags::IDENTIFIER, value, location); }
-    }
-
-    Token readStringToken(SourceLocation location) {
-        std::string value = "";
-
-        while (true) {
-            char c = read();
-            if (c == '"') break; // end quote, we read a string after reading the starting quote
-            if (c == '\0') throw GrammarError(location, "unterminated string");
-            value += c;
-        }
-
-        return Token(TokenTags::STRING_LITERAL, value, location);
-    }
-
-    Token readNumberToken(SourceLocation location) {
-        std::string value = "";
-
-        while (true) {
-            char c = peek();
-            if (!isdigit(c) && c != '.' && c != 'e' && c != 'E') break;
-
-            value += read();
-        }
-
-        float number;
-        try { number = stof(value); }
-        catch (std::out_of_range& e) { throw GrammarError(location, value + " is out of float range"); }
-        catch (std::invalid_argument& e) { throw GrammarError(location, value + " is not a valid number"); }
-        // the following is needed because for example 1.2.3 is converted to 1.2 and we want to avoid this
-        // we should also check if there are multiple 'e' or 'E' characters, and enable negative powers
-        if (std::to_string(number) != value) throw GrammarError(location, value + " is not a valid number");
-
-        return Token(TokenTags::NUMBER_LITERAL, number, location);
-    }
+    Token readIdentifierOrKeyword(SourceLocation location);
+    Token readStringToken(SourceLocation location);
+    Token readNumberToken(SourceLocation location);
 };
-
-std::string tokenToString(const Token& token) {
-    switch (token.tag) {
-        case TokenTags::KEYWORD:
-            return "<keyword>";
-        case TokenTags::IDENTIFIER:
-            return token.value.string;
-        case TokenTags::STRING_LITERAL:
-            return "\"" + token.value.string + "\"";
-        case TokenTags::NUMBER_LITERAL:
-            return std::to_string(token.value.numberLiteral);
-        case TokenTags::SYMBOL:
-            return std::string(1, token.value.symbol);
-        case TokenTags::STOP:
-            return "<EOF>";
-        default:
-            return "<unknown>";
-    }
-}
-
-std::string keywordToString(Keywords k) {
-    switch (k) {
-        case Keywords::CAMERA: return "camera";
-        case Keywords::SPHERE: return "sphere";
-        case Keywords::MATERIAL: return "material";
-        case Keywords::DIFFUSE: return "diffuse";
-        case Keywords::SPECULAR: return "specular";
-        // ... aggiungi tutti gli altri enum
-        default: return "<unknown>";
-    }
-}
-
 
 class Scene {
 public:
     World world;
-    std::shared_ptr<Camera> camera;
-    std::map<std::string, Material> materials;
-    std::map<std::string, float> float_variables;
-    std::set<std::string> overridden_variables;
+    std::shared_ptr<Camera> camera; // shared pointer just to check if it's initialized
+    std::unordered_map<std::string, std::shared_ptr<Material>> materials;
+    std::unordered_map<std::string, float> floatVariables;
+    std::set<std::string> overriddenVariables; // easier to search than a vector
 
-    void expectSymbol(InputStream& input_file, const std::string& symbol);
-    Keywords expectKeywords(InputStream& input_file, const std::vector<Keywords>& keywords);
-    float expectNumber(InputStream& input_file, Scene& scene);
-    std::string expectString(InputStream& input_file);
-    std::string expectIdentifier(InputStream& input_file);
+    void expectSymbol(InputStream& inputFile, const char& symbol);
+    Keywords expectKeywords(InputStream& inputFile, const std::vector<Keywords>& keywords);
+    float expectNumber(InputStream& inputFile);
+    std::string expectString(InputStream& inputFile);
+    std::string expectIdentifier(InputStream& inputFile);
 
-    static Vec3 parseVector(InputStream& input_file, Scene& scene);
-    static Color parseColor(InputStream& input_file, Scene& scene);
-    static std::shared_ptr<Texture> parseTexture(InputStream& input_file, Scene& scene);
-    static std::shared_ptr<Material> parseMaterialDefinition(InputStream& input_file, Scene& scene); //solo il materiale (tipo, parametri)
-    static std::pair<std::string, Material> parseNamedMaterial(InputStream& input_file, Scene& scene); // nome + materiale completo
-    static Transformation parseTransformation(InputStream& input_file, Scene& scene);
-    static Sphere parseSphere(InputStream& input_file, Scene& scene);
-    static Plane parsePlane(InputStream& input_file, Scene& scene);
-    static std::shared_ptr<Camera> parseCamera(InputStream& input_file, Scene& scene);
-    static Scene parseScene(InputStream& input_file, const std::map<std::string, float>& variables = {});
+    Vec3 parseVector(InputStream& inputFile);
+    Color parseColor(InputStream& inputFile);
+    std::shared_ptr<Texture> parseTexture(InputStream& inputFile);
+    //static std::shared_ptr<Material> parseMaterialDefinition(InputStream& inputFile, Scene& scene); //solo il materiale (tipo, parametri)
+    void parseMaterial(InputStream& inputFile); // directly add the material to the map
+    Transformation parseTransformation(InputStream& inputFile);
+    void parseSphere(InputStream& inputFile);   // these functions directly modify world
+    void parsePlane(InputStream& inputFile);
+    void parsePointLight(InputStream& inputFile);
+    void parseCamera(InputStream& inputFile);   // directly assign camera
+    void parseScene(InputStream& inputFile, const std::unordered_map<std::string, float>& variables = std::unordered_map<std::string, float>());
 };
 
 
-// Implementazioni
 
-void expectSymbol(InputStream& input_file, const std::string& symbol) {
-    Token token = input_file.readToken();
-    if (token.tag != TokenTags::SYMBOL || symbol.size() != 1 || token.value.symbol != symbol[0]) {
-        throw GrammarError(token.location, "Expected a keyword, got '" + tokenToString(token) + "'");
+
+// The following will be moved to a cpp file in a dedicated PR with other libraries
+
+
+
+// InputStream
+
+char InputStream::read() {
+    char c;
+    if (_savedChar.has_value()) {
+        c = _savedChar.value();
+        _savedChar.reset();
+    } else {
+        _stream.get(c); // we could skip whitespaces here
+        if (_stream.eof()) c = '\0'; // cross-platform support I guess? Not needed on windows with g++
+    }
+    
+    _savedLocation = _location;
+    updateLocation(c);
+    _peeking = false;
+
+    return c;
+}
+
+void InputStream::unread(const char& c) {
+    if (_savedChar.has_value() && !_peeking) {
+        std::cout << "ERROR: there's already an unread character" << std::endl;
+        exit(-1);
+    }
+    _savedChar = c; // we could use _stream.putback(c) and avoid using _savedChar
+    _location = _savedLocation;
+}
+
+Token InputStream::readToken () {
+    if (_savedToken.has_value()) {
+        Token t = _savedToken.value();
+        _savedToken.reset();
+        return t;
+    }
+
+    _skipWsAndComments();
+    char c = peek();
+
+    if (c == '\0') return Token(TokenTags::STOP, '\0', _location); // EOF
+
+    SourceLocation tokenLocation = _location;
+
+    if (SYMBOLS.find(c) != std::string::npos) return Token(TokenTags::SYMBOL, read(), tokenLocation);
+    else if (c == '"') {
+        read(); // we need to skip the '"'
+        return readStringToken(tokenLocation);
+    }
+    else if (isdigit(c) || c == '-') return readNumberToken(tokenLocation);
+    else if (isalpha(c)) return readIdentifierOrKeyword(tokenLocation);
+    else throw GrammarError(_location, "invalid character '" + std::string{read()} + "'");
+}
+
+void InputStream::_skipWsAndComments() {
+    char c = read();
+    while (isCharSkippable(c)) {
+        if (c == '#') skipComment(); // skip to next line if there's a comment
+        
+        c = read();
+
+        if (c == '\0') return;       // EOF, nothing to do
+    }
+
+    unread(c);                       // unread the last, non-skippable, char read
+}
+
+Token InputStream::readIdentifierOrKeyword(SourceLocation location) {
+    std::string value = "";
+
+    while (true) {
+        if (!isalnum(peek()) && peek() != '_') break; // we know the first char is't a number
+        value += read();
+    }
+
+    // if is not a keyword, return an identifier
+    try { return Token(TokenTags::KEYWORD, KEYWORDS.at(value), location); } // at() throws exception if the key is not present
+    catch (std::out_of_range& e) { return Token(TokenTags::IDENTIFIER, value, location); }
+}
+
+Token InputStream::readStringToken(SourceLocation location) {
+    std::string value = "";
+
+    while (true) {
+        char c = read();
+        if (c == '"') break; // end quote, we read a string after reading the starting quote
+        if (c == '\0') throw GrammarError(location, "unterminated string");
+        value += c;
+    }
+
+    return Token(TokenTags::STRING_LITERAL, value, location);
+}
+
+Token InputStream::readNumberToken(SourceLocation location) {
+    std::string value = "";
+    bool dots = false, es = false, minus = false;
+
+    while (true) {
+        char c = peek();
+        if (!isdigit(c) && c != '.' && c != 'e' && c != 'E' && c != '-') break;
+
+        // the following is needed because for example 1.2.3 is read correctly until the end,
+        // and is then converted to 1.2 by stof without throwing errors
+        if (c == '.')
+            dots ? throw GrammarError(_location, "too many '.' in float initialization") : dots = true;
+
+        // we should also check if there are multiple 'e' or 'E' characters, 1e2e3 becomes 100 otherwise
+        else if (c == 'e' || c == 'E')
+            es ? throw GrammarError(_location, "too many 'e's in float initialization") : es = true;
+
+        // we should add similar checks for the '-' sign, since -1-2 is read but becomes just -1
+        // but it's complicated by the (possible) exponential sign, and is probably useless anyway
+
+        value += read();
+    }
+
+    float number;
+    try { number = stof(value); }
+    catch (std::out_of_range& e) { throw GrammarError(location, value + " is out of float range"); }
+    catch (std::invalid_argument& e) { throw GrammarError(location, value + " is not a valid number"); }
+
+    return Token(TokenTags::NUMBER_LITERAL, number, location);
+}
+
+
+
+// Scene
+
+void Scene::expectSymbol(InputStream& inputFile, const char& symbol) {
+    Token token = inputFile.readToken();
+    if (token.tag != TokenTags::SYMBOL || token.value.symbol != symbol) {
+        throw GrammarError(token.location, "expected '" + std::string{symbol} + "', got \"" + token.toString() + "\"");
     }
 }
 
-Keywords expectKeywords(InputStream& input_file, const std::vector<Keywords>& keywords) {
-    Token token = input_file.readToken();
+Keywords Scene::expectKeywords(InputStream& inputFile, const std::vector<Keywords>& keywords) {
+    Token token = inputFile.readToken();
     if (token.tag != TokenTags::KEYWORD) {
-        throw GrammarError(token.location, "Expected a keyword, got '" + tokenToString(token) + "'");
+        throw GrammarError(token.location, "expected a keyword, got \"" + token.toString() + "\"");
     }
 
     Keywords kw = token.value.keyword;
     if (std::find(keywords.begin(), keywords.end(), kw) == keywords.end()) {
-        std::string expected_list;
+        std::string expectedList;
         for (const auto& k : keywords)
-            expected_list += keywordToString(k) + ", ";
-        if (!expected_list.empty()) expected_list.pop_back(), expected_list.pop_back();
-        throw GrammarError(token.location, "Expected one of {" + expected_list + "}, got '" + keywordToString(kw) + "'");
+            expectedList += INVERSE_KEYWORDS.at(k) + ", ";
+        if (!expectedList.empty()) expectedList.pop_back(), expectedList.pop_back(); // remove last ", "
+        throw GrammarError(token.location, "expected one of {" + expectedList + "}, got \"" + INVERSE_KEYWORDS.at(kw) + "\"");
     }
 
     return kw;
 }
 
-float expectNumber(InputStream& input_file, Scene& scene) {
-    Token token = input_file.readToken();
+float Scene::expectNumber(InputStream& inputFile) {
+    Token token = inputFile.readToken();
 
     if (token.tag == TokenTags::NUMBER_LITERAL) {
         return token.value.numberLiteral;
     } else if (token.tag == TokenTags::IDENTIFIER) {
         std::string name = token.value.string;
-        if (!scene.float_variables.contains(name)) { //c++ 20 
-            throw GrammarError(token.location, "Unknown variable '" + name + "'");
+        if (!floatVariables.contains(name)) { // c++ 20 
+            throw GrammarError(token.location, "unknown variable \"" + name + "\"");
         }
-        return scene.float_variables[name];
+        return floatVariables[name];
     }
 
-    throw GrammarError(token.location, "Expected a number or variable, got '" + tokenToString(token) + "'");
+    throw GrammarError(token.location, "expected a number, got " + token.toString());
 }
 
-std::string expectString(InputStream& input_file) {
-    Token token = input_file.readToken();
+std::string Scene::expectString(InputStream& inputFile) {
+    Token token = inputFile.readToken();
     if (token.tag != TokenTags::STRING_LITERAL) {
-        throw GrammarError(token.location, "Expected a string, got '" + tokenToString(token) + "'");
+        throw GrammarError(token.location, "expected a string, got " + token.toString());
     }
     return token.value.string;
 }
 
-std::string expectIdentifier(InputStream& input_file) {
-    Token token = input_file.readToken();
+std::string Scene::expectIdentifier(InputStream& inputFile) {
+    Token token = inputFile.readToken();
     if (token.tag != TokenTags::IDENTIFIER) {
-        throw GrammarError(token.location, "Expected an identifier, got '" + tokenToString(token) + "'");
+        throw GrammarError(token.location, "expected an identifier, got " + token.toString());
     }
     return token.value.string;
 }
 
 
-Vec3 Scene::parseVector(InputStream& input_file, Scene& scene) {
-    scene.expectSymbol(input_file, "[");
-    float x = scene.expectNumber(input_file, scene);
-    scene.expectSymbol(input_file, ",");
-    float y = scene.expectNumber(input_file, scene);
-    scene.expectSymbol(input_file, ",");
-    float z = scene.expectNumber(input_file, scene);
-    scene.expectSymbol(input_file, "]");
+Vec3 Scene::parseVector(InputStream& inputFile) {
+    expectSymbol(inputFile, '[');
+    float x = expectNumber(inputFile);
+    expectSymbol(inputFile, ',');
+    float y = expectNumber(inputFile);
+    expectSymbol(inputFile, ',');
+    float z = expectNumber(inputFile);
+    expectSymbol(inputFile, ']');
     return Vec3(x, y, z);
 }
 
-Color Scene::parseColor(InputStream& input_file, Scene& scene) {
-    scene.expectSymbol(input_file, "<");
-    float r = scene.expectNumber(input_file, scene);
-    scene.expectSymbol(input_file, ",");
-    float g = scene.expectNumber(input_file, scene);
-    scene.expectSymbol(input_file, ",");
-    float b = scene.expectNumber(input_file, scene);
-    scene.expectSymbol(input_file, ">");
+Color Scene::parseColor(InputStream& inputFile) {
+    expectSymbol(inputFile, '<');
+    float r = expectNumber(inputFile);
+    expectSymbol(inputFile, ',');
+    float g = expectNumber(inputFile);
+    expectSymbol(inputFile, ',');
+    float b = expectNumber(inputFile);
+    expectSymbol(inputFile, '>');
     return Color(r, g, b);
 }
 
-Texture* parseTexture(InputStream& input_file, Scene& scene) {
-    Keywords kw = expectKeywords(input_file, {
+std::shared_ptr<Texture> Scene::parseTexture(InputStream& inputFile) {
+    Keywords kw = expectKeywords(inputFile, {
         Keywords::UNIFORM, Keywords::CHECKERED, Keywords::IMAGE
     });
 
-    expectSymbol(input_file, std::string("("));
+    expectSymbol(inputFile, '(');
 
-    Texture* result = nullptr;
+    std::shared_ptr<Texture> result;
 
     if (kw == Keywords::UNIFORM) {
-        Color color = Scene::parseColor(input_file, scene);
-        result = new UniformTexture(color);
+        Color color = Scene::parseColor(inputFile);
+        result = std::make_shared<UniformTexture>(color);
     } else if (kw == Keywords::CHECKERED) {
-        Color c1 = Scene::parseColor(input_file, scene);
-        expectSymbol(input_file, ",");
-        Color c2 = Scene::parseColor(input_file, scene);
-        expectSymbol(input_file, ",");
-        int steps = (int)expectNumber(input_file, scene);
-        result = new CheckeredTexture(c1, c2, steps);
-    } else if (kw == Keywords::IMAGE) {
-        std::string filename = expectString(input_file);
-        HDRImage image(filename);
-        result = new ImageTexture(image);
+        Color c1 = Scene::parseColor(inputFile);
+        expectSymbol(inputFile, ',');
+        Color c2 = Scene::parseColor(inputFile);
+        expectSymbol(inputFile, ',');
+        int steps = (int) expectNumber(inputFile);
+        result = std::make_shared<CheckeredTexture>(c1, c2, steps);
+    } else {
+        std::string filename = expectString(inputFile);
+        result = std::make_shared<ImageTexture>(HDRImage(filename));
     }
 
-    expectSymbol(input_file, ")");
+    expectSymbol(inputFile, ')');
     return result;
 }
 
-std::shared_ptr<Material> parseMaterialDefinition(InputStream& input_file, Scene& scene) {
-    Keywords kw = expectKeywords(input_file, {Keywords::DIFFUSE, Keywords::SPECULAR});
-    expectSymbol(input_file, "(");
+void Scene::parseMaterial(InputStream& inputFile) {
+    std::string name = expectIdentifier(inputFile);
+    expectSymbol(inputFile, '(');
 
-    std::shared_ptr<Texture> texture(parseTexture(input_file, scene));
+    Keywords kw = expectKeywords(inputFile, {Keywords::DIFFUSE, Keywords::SPECULAR});
+    
+    expectSymbol(inputFile, '(');
+    std::shared_ptr<Texture> texture = parseTexture(inputFile);
+    expectSymbol(inputFile, ',');
+    std::shared_ptr<Texture> emittedRadiance = parseTexture(inputFile);
+    expectSymbol(inputFile, ')');
 
-    expectSymbol(input_file, ")");
+    expectSymbol(inputFile, ')');
 
     if (kw == Keywords::DIFFUSE)
-        return std::make_shared<DiffuseMaterial>(texture);
+        materials[name] = std::make_shared<DiffuseMaterial>(texture, emittedRadiance);
     else
-        return std::make_shared<SpecularMaterial>(texture);
+        materials[name] = std::make_shared<SpecularMaterial>(texture, emittedRadiance);
 }
 
-
-std::pair<std::string, std::shared_ptr<Material>> parseNameMaterial(InputStream& input_file, Scene& scene) {
-    std::string name = expectIdentifier(input_file);
-    expectSymbol(input_file, "(");
-    std::shared_ptr<Material> material = parseMaterialDefinition(input_file, scene);
-    expectSymbol(input_file,")");
-    return {name, material};
-}
-
-
-Transformation parseTransformation(InputStream& input_file, Scene& scene) {
-    Transformation result;
+Transformation Scene::parseTransformation(InputStream& inputFile) {
+    Transformation result; // default is identity
 
     while (true) {
-        Keywords kw = expectKeywords(input_file, {
+        Keywords kw = expectKeywords(inputFile, {
             Keywords::IDENTITY,
             Keywords::TRANSLATION,
             Keywords::ROTATION_X,
@@ -578,26 +628,27 @@ Transformation parseTransformation(InputStream& input_file, Scene& scene) {
             Keywords::SCALING
         });
 
-        expectSymbol(input_file, "(");
+        if (kw != Keywords::IDENTITY) {
+            expectSymbol(inputFile, '(');
 
-        if (kw == Keywords::IDENTITY) {
-        } else if (kw == Keywords::TRANSLATION) {
-            result = result * translation(Scene::parseVector(input_file, scene));
-        } else if (kw == Keywords::ROTATION_X) {
-            result = result * rotation(expectNumber(input_file, scene), Axis::X);
-        } else if (kw == Keywords::ROTATION_Y) {
-            result = result * rotation(expectNumber(input_file, scene), Axis::Y);
-        } else if (kw == Keywords::ROTATION_Z) {
-            result = result * rotation(expectNumber(input_file, scene), Axis::Z);
-        } else if (kw == Keywords::SCALING) {
-            result = result * scaling(Scene::parseVector(input_file, scene));
+            if (kw == Keywords::TRANSLATION) {
+                result = result * translation(parseVector(inputFile));
+            } else if (kw == Keywords::ROTATION_X) {
+                result = result * rotation(expectNumber(inputFile), Axis::X);
+            } else if (kw == Keywords::ROTATION_Y) {
+                result = result * rotation(expectNumber(inputFile), Axis::Y);
+            } else if (kw == Keywords::ROTATION_Z) {
+                result = result * rotation(expectNumber(inputFile), Axis::Z);
+            } else if (kw == Keywords::SCALING) {
+                result = result * scaling(parseVector(inputFile));
+            }
+
+            expectSymbol(inputFile, ')');
         }
 
-        expectSymbol(input_file, ")");
-
-        Token t = input_file.readToken();
+        Token t = inputFile.readToken();
         if (t.tag != TokenTags::SYMBOL || t.value.symbol != '*') {
-            input_file.unreadToken(t);
+            inputFile.unreadToken(t);
             break;
         }
     }
@@ -605,109 +656,121 @@ Transformation parseTransformation(InputStream& input_file, Scene& scene) {
     return result;
 }
 
-Sphere parseSphere(InputStream& input_file, Scene& scene) {
-    expectSymbol(input_file, "(");
-    std::string mat = expectIdentifier(input_file);
+void Scene::parseSphere(InputStream& inputFile) {
+    expectSymbol(inputFile, '(');
+    std::string material = expectIdentifier(inputFile);
 
-    if (!scene.materials.contains(mat)) {  //c++20
-        throw GrammarError(input_file._location, "Unknown material: " + mat);
+    if (!materials.contains(material)) { // c++20
+        throw GrammarError(inputFile._location, "unknown material: \"" + material + "\"");
     }
 
-    expectSymbol(input_file, ",");
-    Transformation transf = parseTransformation(input_file, scene);
-    expectSymbol(input_file, ")");
+    expectSymbol(inputFile, ',');
+    Transformation transf = parseTransformation(inputFile);
+    expectSymbol(inputFile, ')');
 
-    return Sphere(std::make_shared<Material>(scene.materials[mat]), transf);
+    world.addShape(std::make_shared<Sphere>(materials[material], transf));
 }
 
-Plane parsePlane(InputStream& input_file, Scene& scene) {
-    expectSymbol(input_file, "(");
-    std::string mat = expectIdentifier(input_file);
+void Scene::parsePlane(InputStream& inputFile) {
+    expectSymbol(inputFile, '(');
+    std::string material = expectIdentifier(inputFile);
 
-    if (!scene.materials.contains(mat)) { //c++20
-        throw GrammarError(input_file._location, "Unknown material: " + mat);
+    if (!materials.contains(material)) { // c++20
+        throw GrammarError(inputFile._location, "unknown material: \"" + material + "\"");
     }
 
-    expectSymbol(input_file, ",");
-    Transformation transf = parseTransformation(input_file, scene);
-    expectSymbol(input_file, ",");
+    expectSymbol(inputFile, ',');
+    Transformation transf = parseTransformation(inputFile);
+    expectSymbol(inputFile, ')');
 
-    return Plane(std::make_shared<Material>(scene.materials[mat]), transf);
+    world.addShape(std::make_shared<Plane>(materials[material], transf));
 }
 
-Camera* parseCamera(InputStream& input_file, Scene& scene) {
-    expectSymbol(input_file, "(");
-    Keywords kw = expectKeywords(input_file, {Keywords::PERSPECTIVE, Keywords::ORTHOGONAL});
-    expectSymbol(input_file, ",");
-    Transformation transf = parseTransformation(input_file, scene);
-    expectSymbol(input_file, ",");
-    float aspect = expectNumber(input_file, scene);
-    expectSymbol(input_file, ",");
-    float distance = expectNumber(input_file, scene);
-    expectSymbol(input_file, ")");
+void Scene::parsePointLight(InputStream& inputFile) {
+    expectSymbol(inputFile, '(');
+    Vec3 position = parseVector(inputFile);
+    expectSymbol(inputFile, ',');
+    Color color = parseColor(inputFile);
+    expectSymbol(inputFile, ',');
+    float radius = expectNumber(inputFile);
+    expectSymbol(inputFile, ')');
+
+    world.addLight(PointLight(Point3(position.x, position.y, position.z), color, radius));
+}
+
+void Scene::parseCamera(InputStream& inputFile) {
+    expectSymbol(inputFile, '(');
+    Keywords kw = expectKeywords(inputFile, {Keywords::PERSPECTIVE, Keywords::ORTHOGONAL});
+    expectSymbol(inputFile, ',');
+    float aspectRatio = expectNumber(inputFile);
+    expectSymbol(inputFile, ',');
+    float imageWidth = expectNumber(inputFile);
+    expectSymbol(inputFile, ',');
+    float distance = expectNumber(inputFile);
+    expectSymbol(inputFile, ',');
+    Transformation transf = parseTransformation(inputFile);
+    expectSymbol(inputFile, ')');
 
     if (kw == Keywords::PERSPECTIVE)
-        return new Camera("perspective", aspect, imageWidth, distance, transf);
+        camera = std::make_shared<Camera>("perspective", aspectRatio, imageWidth, distance, transf);
     else
-        return new OrthogonalCamera(aspect, transf);
+        camera = std::make_shared<Camera>("orthogonal", aspectRatio, imageWidth, distance, transf);
 }
 
-Scene parseScene(InputStream& input_file, const std::unordered_map<std::string, float>& variables = {}) {
-    Scene scene;
-    scene.float_variables = variables;
-    scene.overridden_variables.insert(variables.begin(), variables.end());
+void Scene::parseScene(InputStream& inputFile, const std::unordered_map<std::string, float>& variables) {
+    floatVariables = variables;
+    for (const auto& pair: variables) overriddenVariables.insert(pair.first);
+    //overriddenVariables.insert(variables.begin(), variables.end());
 
     while (true) {
-        Token tok = input_file.readToken();
-        if (tok.tag == TokenTags::STOP)
+        Token token = inputFile.readToken();
+        if (token.tag == TokenTags::STOP)
             break;
 
-        if (tok.tag != TokenTags::KEYWORD)
-            throw GrammarError(tok.location, "Expected a keyword");
+        if (token.tag != TokenTags::KEYWORD)
+            throw GrammarError(token.location, "expected a keyword");
 
-        switch (tok.value.keyword) {
-            case Keywords::FLOAT: {
-                std::string name = expectIdentifier(input_file);
-                auto loc = input_file._location();
-                expectSymbol(input_file, "(");
-                float val = expectNumber(input_file, scene);
-                expectSymbol(input_file, ")");
+        std::string name;   // the compiler isn't happy even if
+        SourceLocation loc; // these are used only in the FLOAT case
+        float val;          // so we declare them before the switch
+        switch (token.value.keyword) {
+            case Keywords::FLOAT:
+                name = expectIdentifier(inputFile);
+                loc = inputFile._location;
+                expectSymbol(inputFile, '(');
+                val = expectNumber(inputFile);
+                expectSymbol(inputFile, ')');
 
-                if (scene.float_variables.contains(name) && !scene.overridden_variables.contains(name)) { //c++20
-                    throw GrammarError(loc, "Variable " + name + " cannot be redefined");
-                }
+                if (floatVariables.contains(name) && !overriddenVariables.contains(name)) // c++20
+                    throw GrammarError(loc, "redefinition of variable \"" + name + "\"");
 
-                if (!scene.overridden_variables.contains(name)) //c++20
-                    scene.float_variables[name] = val;
+                if (!overriddenVariables.contains(name)) // c++20
+                    floatVariables[name] = val;
 
                 break;
-            }
-
             case Keywords::SPHERE:
-                scene.world.addShape(parseSphere(input_file, scene));
+                parseSphere(inputFile);
                 break;
             case Keywords::PLANE:
-                scene.world.addShape(parsePlane(input_file, scene));
+                parsePlane(inputFile);
                 break;
             case Keywords::CAMERA:
-                if (scene.camera != nullptr)
-                    throw GrammarError(tok.location, "Cannot define more than one camera");
-                scene.camera = parseCamera(input_file, scene);
+                if (camera != nullptr)
+                    throw GrammarError(token.location, "cannot define more than one camera");
+                parseCamera(inputFile);
                 break;
             case Keywords::MATERIAL: {
-                auto [name, mat] = parseMaterial(input_file, scene);
-                scene.materials[name] = mat;
+                parseMaterial(inputFile);
                 break;
             }
-
+            case Keywords::POINT_LIGHT: {
+                parsePointLight(inputFile);
+                break;
+            }
             default:
-                throw GrammarError(tok.location, "Unexpected keyword");
+                throw GrammarError(token.location, "unexpected keyword");
         }
     }
-
-    return scene;
 }
-
-
 
 #endif
