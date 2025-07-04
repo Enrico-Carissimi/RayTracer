@@ -38,7 +38,11 @@
 *.png
 *.jpg
 *.jpeg
-test/test.pfm
+*.pfm
+!test/earth.pfm
+!test/memorial.pfm
+!test/reference_be.pfm
+!test/reference_le.pfm
 
 # Build folder
 build/*
