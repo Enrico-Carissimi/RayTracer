@@ -335,6 +335,20 @@ public:
     std::unordered_map<std::string, float> floatVariables;
     std::set<std::string> overriddenVariables; // easier to search than a vector
 
+    Scene() {}
+    Scene(std::string fileName, const std::unordered_map<std::string, float>& variables = std::unordered_map<std::string, float>()) {
+        std::ifstream file(fileName);
+        if (file.fail()) { //in the main we already check using CLI11, but you never know
+            std::cout << "ERROR: impossible to open file \"" + fileName + "\"" << std::endl;
+            exit(-1);
+        }
+        InputStream stream(file, fileName);
+        parse(stream, variables);
+    }
+
+    void parse(InputStream& inputFile, const std::unordered_map<std::string, float>& variables = std::unordered_map<std::string, float>());
+
+private:
     void expectSymbol(InputStream& inputFile, const char& symbol);
     Keywords expectKeywords(InputStream& inputFile, const std::vector<Keywords>& keywords);
     float expectNumber(InputStream& inputFile);
@@ -344,14 +358,12 @@ public:
     Vec3 parseVector(InputStream& inputFile);
     Color parseColor(InputStream& inputFile);
     std::shared_ptr<Texture> parseTexture(InputStream& inputFile);
-    //static std::shared_ptr<Material> parseMaterialDefinition(InputStream& inputFile, Scene& scene); //solo il materiale (tipo, parametri)
     void parseMaterial(InputStream& inputFile); // directly add the material to the map
     Transformation parseTransformation(InputStream& inputFile);
     void parseSphere(InputStream& inputFile);   // these functions directly modify world
     void parsePlane(InputStream& inputFile);
     void parsePointLight(InputStream& inputFile);
     void parseCamera(InputStream& inputFile);   // directly assign camera
-    void parseScene(InputStream& inputFile, const std::unordered_map<std::string, float>& variables = std::unordered_map<std::string, float>());
 };
 
 
@@ -463,11 +475,11 @@ Token InputStream::readNumberToken(SourceLocation location) {
         // the following is needed because for example 1.2.3 is read correctly until the end,
         // and is then converted to 1.2 by stof without throwing errors
         if (c == '.')
-            dots ? throw GrammarError(_location, "too many '.' in float initialization") : dots = true;
+            dots = dots ? throw GrammarError(_location, "too many '.' in float initialization") : true;
 
         // we should also check if there are multiple 'e' or 'E' characters, 1e2e3 becomes 100 otherwise
         else if (c == 'e' || c == 'E')
-            es ? throw GrammarError(_location, "too many 'e's in float initialization") : es = true;
+            es = es ? throw GrammarError(_location, "too many 'e's in float initialization") : true;
 
         // we should add similar checks for the '-' sign, since -1-2 is read but becomes just -1
         // but it's complicated by the (possible) exponential sign, and is probably useless anyway
@@ -476,7 +488,7 @@ Token InputStream::readNumberToken(SourceLocation location) {
     }
 
     float number;
-    try { number = stof(value); }
+    try { number = std::stof(value); }
     catch (std::out_of_range& e) { throw GrammarError(location, value + " is out of float range"); }
     catch (std::invalid_argument& e) { throw GrammarError(location, value + " is not a valid number"); }
 
@@ -490,14 +502,14 @@ Token InputStream::readNumberToken(SourceLocation location) {
 void Scene::expectSymbol(InputStream& inputFile, const char& symbol) {
     Token token = inputFile.readToken();
     if (token.tag != TokenTags::SYMBOL || token.value.symbol != symbol) {
-        throw GrammarError(token.location, "expected '" + std::string{symbol} + "', got \"" + token.toString() + "\"");
+        throw GrammarError(token.location, "expected '" + std::string{symbol} + "', got " + token.toString());
     }
 }
 
 Keywords Scene::expectKeywords(InputStream& inputFile, const std::vector<Keywords>& keywords) {
     Token token = inputFile.readToken();
     if (token.tag != TokenTags::KEYWORD) {
-        throw GrammarError(token.location, "expected a keyword, got \"" + token.toString() + "\"");
+        throw GrammarError(token.location, "expected a keyword, got " + token.toString());
     }
 
     Keywords kw = token.value.keyword;
@@ -717,7 +729,7 @@ void Scene::parseCamera(InputStream& inputFile) {
         camera = std::make_shared<Camera>("orthogonal", aspectRatio, imageWidth, distance, transf);
 }
 
-void Scene::parseScene(InputStream& inputFile, const std::unordered_map<std::string, float>& variables) {
+void Scene::parse(InputStream& inputFile, const std::unordered_map<std::string, float>& variables) {
     floatVariables = variables;
     for (const auto& pair: variables) overriddenVariables.insert(pair.first);
     //overriddenVariables.insert(variables.begin(), variables.end());
