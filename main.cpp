@@ -34,21 +34,14 @@ void validateFloatVariable(std::string& s, std::unordered_map<std::string, float
 // Render command to generate images from scene files
 void render(const  std::string& input, const std::string& output, int width, float aspectRatio, float a, float gamma, const std::vector<std::string>& floatBuffer,
             const std::string& algorithm, int AAsamples, int nRays, int maxDepth, int russianRouletteLimit) {
-    std::ifstream file(input);
-    if (file.fail()) { // we already check using CLI11 but you never know
-        std::cout << "ERROR: impossible to open file \"" + input + "\"" << std::endl;
-        exit(-1);
-    }
 
     std::unordered_map<std::string, float> floatVariables;
     for (auto s : floatBuffer) {
         validateFloatVariable(s, floatVariables);
     }
 
-    Scene scene;
-    InputStream stream(file, input);
+    Scene scene(input, floatVariables);
 
-    scene.parseScene(stream, floatVariables);
     if (scene.camera == nullptr) // default camera
         scene.camera = std::make_shared<Camera>("perspective", 1., 100., 1., translation(-1., 0., 0.));
 
