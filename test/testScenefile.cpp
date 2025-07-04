@@ -186,7 +186,7 @@ void testParser() {
     InputStream stream(ss, "testfile.fake");
 
     Scene scene;
-    scene.parseScene(stream);
+    scene.parse(stream);
 
     // float variables
     sassert(scene.floatVariables.size() == 1);
@@ -239,7 +239,7 @@ void testUndefinedMaterial() {
     ss.str("plane(this_material_does_not_exist, identity");
     InputStream stream(ss, 0);
 
-    testException(stream, [](InputStream s){ Scene scene; scene.parseScene(s); });
+    testException(stream, [](InputStream s){ Scene scene; scene.parse(s); });
 
     cout << "undefined materials are handled correctly" << endl;
 }
@@ -252,7 +252,7 @@ void testDoubleCamera() {
     );
     InputStream stream(ss, 0);
 
-    testException(stream, [](InputStream s){ Scene scene; scene.parseScene(s); });
+    testException(stream, [](InputStream s){ Scene scene; scene.parse(s); });
 
     cout << "second camera is handled correctly" << endl;
 }
