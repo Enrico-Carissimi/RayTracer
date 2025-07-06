@@ -1,3 +1,6 @@
+# generate a demo image
+# input the angle from terminal to rotate the camera (-f angle:deg)
+
 float angle(0)
 camera(perspective, 1.33333, 640, 1., rotationZ(angle) * translation([-1., 0. ,0.]))
 
