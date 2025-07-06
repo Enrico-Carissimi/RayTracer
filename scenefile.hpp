@@ -724,9 +724,9 @@ void Scene::parseCamera(InputStream& inputFile) {
     expectSymbol(inputFile, ')');
 
     if (kw == Keywords::PERSPECTIVE)
-        camera = std::make_shared<Camera>("perspective", aspectRatio, imageWidth, distance, transf);
+        camera = std::make_shared<Camera>("perspective", aspectRatio, (int)imageWidth, distance, transf);
     else
-        camera = std::make_shared<Camera>("orthogonal", aspectRatio, imageWidth, distance, transf);
+        camera = std::make_shared<Camera>("orthogonal", aspectRatio, (int)imageWidth, distance, transf);
 }
 
 void Scene::parse(InputStream& inputFile, const std::unordered_map<std::string, float>& variables) {
