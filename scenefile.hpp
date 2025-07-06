@@ -1,5 +1,5 @@
-#ifndef __SceneFile__
-#define __SceneFile__
+#ifndef __scenefile__
+#define __scenefile__
 
 #include <string>
 #include <vector>
