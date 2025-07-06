@@ -1,0 +1,18 @@
+# white sphere in a colorfully lit box
+
+camera(perspective, 1., 480, 1., translation([-0.5, 0., 0.]))
+
+material bottom(diffuse(uniform(<0., 0., 0.>), uniform(<1., 0., 0.>)))
+material top(diffuse(uniform(<0., 0., 0.>), uniform(<0., 1., 1.>)))
+material left(diffuse(uniform(<0., 0., 0.>), uniform(<0., 1., 0.>)))
+material right(diffuse(uniform(<0., 0., 0.>), uniform(<1., 0., 1.>)))
+material back(diffuse(uniform(<0., 0., 0.>), uniform(<0., 0., 1.>)))
+material white(diffuse(uniform(<1., 1., 1.>), uniform(<0., 0., 0.>)))
+
+plane(bottom, translation([0., 0., -1.]))
+plane(top, translation([0., 0., 1.]))
+plane(left, translation([0., 1., 0.]) * rotationX(90))
+plane(right, translation([0., -1., 0.]) * rotationX(-90))
+plane(back, translation([1., 0., 0.]) * rotationY(-90))
+
+sphere(white, scaling([0.5, 0.5, 0.5]))

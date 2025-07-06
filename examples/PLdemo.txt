@@ -1,0 +1,20 @@
+# demo for the point light renderer, not much to see with other algorithms
+# white sphere with various lights around and a sloped plane
+# set the luminosity to 0.1 (-l 0.1) or the sphere is gonna be just white
+# you cna change the agle to go around the sphere (-f angle:deg) and the slope of the plane (-f slope:deg)
+
+float angle(0)
+float slope(-30)
+
+camera(perspective, 1., 300, 1., rotationZ(angle) * translation([-1., 0., 0.]))
+
+material white(diffuse(uniform(<1., 1., 1.>), uniform(<0., 0., 0.>)))
+sphere(white, identity)
+plane(white, translation([0., 0., -3.]) * rotationY(slope))
+
+pointLight([2., 0., 0.], <1., 0., 0.>, 1.)
+pointLight([-2., 0., 0.], <0., 1., 0.>, 1.)
+pointLight([0., 2., 0.], <0., 0., 1.>, 1.)
+pointLight([0., -2., 0.], <1., 1., 0.>, 1.)
+pointLight([0., 0., 2.], <1., 0., 1.>, 3.)
+pointLight([0., 0., -2.], <0., 1., 1.>, 3.)
