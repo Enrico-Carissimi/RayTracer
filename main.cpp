@@ -1,7 +1,7 @@
 #include "Camera.hpp"
 #include "World.hpp"
 #include "renderers.hpp"
-#include "Scenefile.hpp"
+#include "scenefile.hpp"
 #include "lib/CLI11.hpp"
 
 

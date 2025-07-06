@@ -1,6 +1,6 @@
 #include <iostream>
 #include "../utils.hpp"
-#include "../Scenefile.hpp"
+#include "../scenefile.hpp"
 
 using std::cout, std::endl;
 
