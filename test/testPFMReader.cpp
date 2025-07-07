@@ -77,10 +77,6 @@ void testWritePMF() {
     testReadFile("../test/test.pfm");
 }
 
-bool isClose(float a, float b) {
-    return std::fabs(a - b) < 1e-6;
-}
-
 
 
 int main(){
@@ -112,8 +108,8 @@ int main(){
     // test readFloat
     unsigned char toRead[] = {0x00, 0x00, 0xc8, 0x42, 0x43, 0x48, 0x00, 0x00, 0x00}; // {100 (le), 200 (be), bonus byte}
     auto stream = streamFromArray(toRead, 9);
-    sassert(isClose(readFloat(stream, Endianness::LITTLE), 100));
-    sassert(isClose(readFloat(stream, Endianness::BIG), 200));
+    sassert(areClose(readFloat(stream, Endianness::LITTLE), 100));
+    sassert(areClose(readFloat(stream, Endianness::BIG), 200));
     testException(stream, [](std::istringstream& ss) -> auto {return readFloat(ss, Endianness::BIG);}); // only 1 byte left
     cout << "readFloat works" << endl;
 
