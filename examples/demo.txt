@@ -1,0 +1,19 @@
+# generate a demo image
+# input the angle from terminal to rotate the camera (-f angle:deg)
+
+float angle(0)
+camera(perspective, 1.33333, 640, 1., rotationZ(angle) * translation([-1., 0. ,0.]))
+
+material opaqueMat(diffuse(uniform(<1., 0.5, 0.3>), uniform(<0., 0., 0.>)))
+material reflectMat(specular(uniform(<0.1, 0.9, 0.4>), uniform(<0., 0., 0.>)))
+material skyMat(diffuse(uniform(<0., 0., 0.>), uniform(<1., 1., 1.>)))
+material floorMat(diffuse(checkered(<0., 1., 1.>, <1., 0., 1.>, 4), uniform(<0., 0., 0.>)))
+material earth(diffuse(image("test/earth.pfm"), uniform(<0., 0., 0.>)))
+
+sphere(opaqueMat, translation([0., 0., -0.2]) * scaling([0.8, 0.8, 0.8]))
+sphere(skyMat, scaling([1000., 1000., 1000.]))
+sphere(reflectMat, translation([1., 2., -0.9]))
+sphere(earth, scaling([0.5, 0.5, 0.5]) * translation([1., -2.4, 1.]) * rotationZ(-30))
+plane(floorMat, translation([0., 0., -1.]))
+
+pointLight([1., 2., 10.], <1., 1., 1.>, 0.)

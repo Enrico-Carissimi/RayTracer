@@ -77,17 +77,6 @@ void testWritePMF() {
     testReadFile("../test/test.pfm");
 }
 
-// tests if an exception is thrown by a function with the specified parameter
-// if the function accepts more parameters, or if it is a constructor, use a lambda: 
-// testException(parameter, [](Parameter p) -> {return function(p, [...]);});
-template<typename Parameter, typename Function>
-void testException(Parameter& parameter, Function function) {
-    bool exceptionThrown = false;
-    try{function(parameter);}
-    catch(std::exception& e){exceptionThrown = true;}
-    sassert(exceptionThrown);
-}
-
 
 
 int main(){

@@ -69,7 +69,6 @@ public:
         return true;
     }
 
-private:
     std::vector<std::shared_ptr<Shape>> _shapes;
 };
 
