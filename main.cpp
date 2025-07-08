@@ -85,8 +85,8 @@ int main(int argc, char* argv[]) {
     // Convert Command
     auto convertCommand = app.add_subcommand("convert", "Convert a .pfm file to another format");
     convertCommand->add_option("input,-i,--input", inputFile, "Input .pfm file")->required()->check(CLI::ExistingPath);
-    convertCommand->add_option("a,-a,--normalization", a, "Normalization factor, defaults to 1")->required()->check(CLI::PositiveNumber);
-    convertCommand->add_option("gamma,-g,--gamma", gamma, "Gamma correction, defaults to 1")->required()->check(CLI::PositiveNumber);
+    convertCommand->add_option("a,-a,--normalization", a, "Normalization factor")->required()->check(CLI::PositiveNumber);
+    convertCommand->add_option("gamma,-g,--gamma", gamma, "Gamma correction")->required()->check(CLI::PositiveNumber);
     convertCommand->add_option("output,-o,--output", outputFile, "Output image file")->required();
     convertCommand->add_option("-l,--luminosity", luminosity, "Manually set the luminosity of the image, useful if it's dark")->check(CLI::NonNegativeNumber);
 
@@ -103,15 +103,15 @@ int main(int argc, char* argv[]) {
     renderCommand->add_option("input,-i,--input", inputFile, "Input .txt file describing the scene to render")->required()->check(CLI::ExistingPath);
     renderCommand->add_option("output,-o,--output", outputFile, "Output file for the rendered .png or .jpeg image, a .pfm image is always saved");
     renderCommand->add_option("-w,--width", imageWidth, "Width of the output image in pixels, overwrites the one defined for the camera")->check(CLI::PositiveNumber);
-    renderCommand->add_option("-r,--aspect-ratio", aspectRatio, "Aspect ratio of the output image, overwrites the one defined for the camera")->check(CLI::PositiveNumber);
     renderCommand->add_option("-a,--norm", a, "Output image normalization factor, defaults to 1")->check(CLI::PositiveNumber);
+    renderCommand->add_option("-r,--aspect-ratio", aspectRatio, "Aspect ratio of the output image, overwrites the one defined for the camera")->check(CLI::PositiveNumber);
     renderCommand->add_option("-l,--luminosity", luminosity, "Manually set the luminosity of the image, useful if it's dark")->check(CLI::NonNegativeNumber);
     renderCommand->add_option("-g,--gamma", gamma, "Output image gamma correction, defaults to 1")->check(CLI::PositiveNumber);
-    renderCommand->add_option("-A,--AA-samples", AAsamples, "Number of samples per pixel used for anti-aliasing")->check(CLI::PositiveNumber);
-    renderCommand->add_option("-n,--ray-number", nRays, "Path tracer only, number of rays sent from every hit point")->check(CLI::PositiveNumber);
-    renderCommand->add_option("-d,--max-depth", maxDepth, "Path tracer only, maximum ray depth")->check(CLI::PositiveNumber);
-    renderCommand->add_option("-L,--rr-limit", russianRouletteLimit, "Path tracer only, ray depth where russian roulette starts. If is bigger the max-depth, russian roulette will never start")->check(CLI::NonNegativeNumber);
-    renderCommand->add_option("-R,--algo", algorithm, "Algorithm to use for rendering: \"path\" (path tracing), \"onoff\", \"flat\", \"light\" (point light tracer)")->check(CLI::IsMember({"path", "onoff", "flat", "light"}));
+    renderCommand->add_option("-A,--AA-samples", AAsamples, "Number of samples per pixel used for anti-aliasing, defaults to 4")->check(CLI::PositiveNumber);
+    renderCommand->add_option("-n,--ray-number", nRays, "Path tracer only, number of rays sent from every hit point, defaults to 3")->check(CLI::PositiveNumber);
+    renderCommand->add_option("-d,--max-depth", maxDepth, "Path tracer only, maximum ray depth, defaults to 5")->check(CLI::PositiveNumber);
+    renderCommand->add_option("-L,--rr-limit", russianRouletteLimit, "Path tracer only, ray depth where russian roulette starts. If is bigger the max-depth, russian roulette will never start. Defaults to 3")->check(CLI::NonNegativeNumber);
+    renderCommand->add_option("-R,--algo", algorithm, "Algorithm to use for rendering: \"path\" (path tracing, default), \"onoff\", \"flat\", \"light\" (point light tracer)")->check(CLI::IsMember({"path", "onoff", "flat", "light"}));
     renderCommand->add_option("-f,--float", floatBuffer, "Declare named float variables, overwrites the ones with the same name in the input file. Syntax: name:value");
     renderCommand->add_option("--seed", seed, "Seed of the random number generator, defaults to 42")->check(CLI::NonNegativeNumber);
     renderCommand->add_option("--sequence", sequence, "Sequence identifier of the random number generator, defaults to 54")->check(CLI::NonNegativeNumber);
@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
         render(inputFile, outputFile, imageWidth, aspectRatio, a, gamma, luminosity, seed, sequence, floatBuffer, algorithm, AAsamples, nRays, maxDepth, russianRouletteLimit);
     }
     else {
-        std::cout << "Program usage: " << argv[0] << " [demo or convert]\n"
+        std::cout << "Program usage: " << argv[0] << " [render or convert]\n"
                   << "Run with --help for more information." << std::endl; 
     }
 
