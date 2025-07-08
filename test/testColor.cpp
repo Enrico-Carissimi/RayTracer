@@ -62,12 +62,6 @@ int main() {
     sassert(!(result4.isClose(Color(1.0f, 2.0f, 3.0f))));
     std::cout << "Test 7 (multiply by -1.0 negative) passed" << std::endl;
 
-    // ----------------------
-    // (Optional test that must fail if uncommented)
-    // ----------------------
-    // sassert(color.isClose(Color(9.0f, 9.0f, 9.0f)));  // MUST FAIL
-    // std::cout << "Test that must fail passed" << std::endl;
-
     return 0;
 }
 
