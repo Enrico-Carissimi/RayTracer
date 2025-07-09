@@ -8,6 +8,11 @@
 #include "Vec3.hpp"
 #include "utils.hpp"
 
+/**
+ * @brief Represents a 3D point in space with coordinates (x, y, z).
+ * 
+ * Supports basic vector arithmetic with Vec3 and comparison for approximate equality.
+ */
 struct Point3 {
     float x, y, z;
 
@@ -37,7 +42,6 @@ struct Point3 {
     inline Point3 operator*(float scalar) const {
     return Point3(x * scalar, y * scalar, z * scalar);
     }
-
 
     // Conversion to Vec3
     inline Vec3 toVec() const { return Vec3(x, y, z); }

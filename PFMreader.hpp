@@ -10,12 +10,16 @@
 
 #include "HDRImage.hpp"
 
-
-
 enum class Endianness {LITTLE, BIG};
 
-
-
+/**
+ * @brief Reads a float value from a stream considering the specified endianness.
+ * 
+ * @param stream Input stream to read 4 bytes from.
+ * @param endianness Byte order (LITTLE or BIG endian).
+ * @return float The float value read from the stream.
+ * @throws std::runtime_error If unable to read 4 bytes.
+ */
 float readFloat(std::istream& stream, Endianness endianness) {
     uint8_t bytes[4];
     stream.read(reinterpret_cast<char*>(bytes), 4);
@@ -37,7 +41,15 @@ float readFloat(std::istream& stream, Endianness endianness) {
     return result;
 }
 
-// from prof. Tomasi lecture (adapted code style)
+/**
+ * @brief Writes a float to a stream with specified endianness.
+ * 
+ * This function is adapted from Prof. Tomasi's lecture code style.
+ *
+ * @param stream Output stream to write to.
+ * @param value Float value to write.
+ * @param endianness Byte order (LITTLE or BIG endian).
+ */
 void writeFloat(std::ostream& stream, float value, Endianness endianness) {
     // Convert "value" in a sequence of 32 bit
     uint32_t doubleWord{*((uint32_t*) &value)};
@@ -58,14 +70,27 @@ void writeFloat(std::ostream& stream, float value, Endianness endianness) {
     }
 }
 
-
-
+/**
+ * @brief Reads a full line from the input stream.
+ * 
+ * @param stream Input stream.
+ * @return std::string The line read as a string.
+ * @throws std::runtime_error If reading fails.
+ */
 std::string readLine(std::istream& stream) {
     std::string buffer;
     if (!std::getline(stream, buffer)) throw std::runtime_error("ERROR: impossible to read line");
     return buffer;
 }
 
+/**
+ * @brief Parses the image size (width and height) from a line of text.
+ * 
+ * @param line String containing two integers (width and height).
+ * @return std::pair<int, int> Pair representing (width, height).
+ * @throws std::invalid_argument If the line does not contain two positive integers.
+ * @throws std::runtime_error If the line contains extra values.
+ */
 std::pair<int, int> parseImageSize(const std::string& line) {
     std::istringstream iss(line);
     int width, height;
@@ -84,6 +109,13 @@ std::pair<int, int> parseImageSize(const std::string& line) {
     return {width, height};
 }
 
+/**
+ * @brief Parses the endianness from a line containing a float value.
+ * 
+ * @param line String representing the scale factor (endianness).
+ * @return Endianness LITTLE or BIG endian based on the float value.
+ * @throws std::invalid_argument If the line is not a valid float or zero.
+ */
 enum Endianness parseEndianness(const std::string& line) {
     float endianness;
     try {
