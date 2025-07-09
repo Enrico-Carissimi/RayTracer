@@ -19,6 +19,12 @@
 #include "Camera.hpp"
 #include "Color.hpp"
 
+/**
+ * @brief Registry that manages unique file names by storing and indexing them.
+ * 
+ * Provides static methods to register a filename and retrieve a filename by its index.
+ * Used to avoid duplicating file names and to reference files by integer IDs.
+ */
 struct FileRegistry {
 public:
     static int registerFile(const std::string& filename) {
@@ -39,8 +45,11 @@ private:
 
 inline std::vector<std::string> FileRegistry::_files = {};
 
-
-
+/**
+ * @brief Represents a source code location with line and column numbers.
+ * 
+ * Optionally associates the location with a file index to retrieve the filename.
+ */
 struct SourceLocation {
 public:
     int line;
@@ -57,10 +66,14 @@ private:
     int _fileIndex; // index into FileRegistry
 };
 
-
-
 const std::string SYMBOLS = ",()[]<>*";
 
+/**
+ * @brief Enumeration of all recognized keywords in the scene file format.
+ * 
+ * These keywords represent various constructs such as data types, transformations,
+ * camera types, shapes, materials, and textures.
+ */
 enum class Keywords {
     NEW,
     FLOAT,
@@ -98,6 +111,14 @@ const std::unordered_map<std::string, Keywords> KEYWORDS {
     {"specular", Keywords::SPECULAR}
 };
 
+/**
+ * @brief Custom hash function to enable using enum class types as keys in unordered_map.
+ * 
+ * Enum classes do not have a default hash function, so this struct provides a
+ * templated hash operator that casts the enum to its underlying integer type.
+ * 
+ * Usage: This allows Keywords enum values to be used as keys in unordered_maps.
+ */
 // from https://stackoverflow.com/questions/18837857/cant-use-enum-class-as-unordered-map-key
 struct _EnumClassHash {     // we need a custom hash functin to use
     template <typename T>   // user defined data as map keys
@@ -133,6 +154,17 @@ enum class TokenTags {
     KEYWORD, IDENTIFIER, STRING_LITERAL, NUMBER_LITERAL, SYMBOL, STOP
 };
 
+/**
+ * @brief Union to hold the actual value of a token.
+ * 
+ * Can store:
+ * - Keywords enum value for keywords,
+ * - std::string for identifiers and string literals,
+ * - float for numeric literals,
+ * - char for symbols.
+ * 
+ * Constructors and destructor manage initialization and cleanup.
+ */
 union TokenUnion {
     Keywords keyword;
     std::string string; // string literal and identifier
@@ -147,6 +179,14 @@ union TokenUnion {
     ~TokenUnion() {}
 };
 
+/**
+ * @brief Represents a lexical token with type, value, and source location.
+ * 
+ * Provides constructors for different token types and implements copy assignment.
+ * The destructor handles proper cleanup of string members.
+ * 
+ * The toString() method returns a string representation of the token for debugging.
+ */
 struct Token {
     TokenTags tag;
     TokenUnion value;
@@ -218,8 +258,14 @@ struct Token {
     }
 };
 
-
-
+/**
+ * @brief Exception class for reporting grammar errors during parsing.
+ * 
+ * Stores the location (file, line, column) of the error along with a descriptive message.
+ * The full error message is constructed by combining the location info and the message.
+ * 
+ * Overrides std::exception::what() to return the full error description.
+ */
 class GrammarError : public std::exception {
 public:
     GrammarError(const SourceLocation& location, const std::string& message)
@@ -240,8 +286,14 @@ private:
     std::string _fullMessage;
 };
 
-
-
+/**
+ * @brief A helper class for reading characters and tokens from an input stream,
+ *        tracking source location (file, line, column) for error reporting.
+ * 
+ * Supports reading characters, unread characters (putting them back), peeking,
+ * reading tokens (keywords, identifiers, literals, symbols), and unread tokens.
+ * Also handles skipping whitespace and comments.
+ */
 class InputStream {
 public:
     InputStream(std::istream& stream, int fileIndex, int tabs = 4) // I'm writing in vscode with tab = 4 spaces
@@ -295,8 +347,6 @@ public:
         _savedToken = token;
     }
     
-
-
     SourceLocation _location;
 
     void _skipWsAndComments();
@@ -327,6 +377,12 @@ private:
     Token readNumberToken(SourceLocation location);
 };
 
+/**
+ * @brief Represents a 3D scene including world geometry, lights, camera, materials, and variables.
+ * 
+ * This class is responsible for loading and parsing scene description files,
+ * managing materials and variables, and storing the main elements used for rendering.
+ */
 class Scene {
 public:
     World world;
@@ -365,8 +421,6 @@ private:
     void parsePointLight(InputStream& inputFile);
     void parseCamera(InputStream& inputFile);   // directly assign camera
 };
-
-
 
 
 // The following will be moved to a cpp file in a dedicated PR with other libraries
