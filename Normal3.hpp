@@ -6,6 +6,10 @@
 #include <string>
 #include "Vec3.hpp"
 
+/**
+ * @struct Normal3
+ * @brief Represents a 3D normal vector with basic operations.
+ */
 struct Normal3 {
     float x, y, z;
 

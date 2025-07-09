@@ -21,8 +21,10 @@ float clamp(float x) {
     return x / (1 + x);
 }
 
-
-
+/**
+ * @class HDRImage
+ * @brief Represents a high dynamic range (HDR) image with floating-point color data.
+ */
 class HDRImage {
 public:
     HDRImage(int width, int height) : _width(width), _height(height) {
@@ -71,6 +73,14 @@ public:
         return;
     }
 
+    /**
+     * @brief Computes the average luminosity of the entire image.
+     * 
+     * Uses logarithmic averaging to avoid skew by very bright pixels.
+     * 
+     * @param delta Small constant added to avoid log(0).
+     * @return float The average luminosity.
+     */
     float averageLuminosity(float delta = 1e-10) {
         float sum = 0.0;
         for (const Color& pixel : _pixels) {
@@ -103,7 +113,13 @@ public:
         }
     }
 
-    // @brief saves the image as the format specified by the extension of fileName (pfm, png, jpeg)
+    /**
+     * @brief Saves the image to a file, format chosen by file extension (pfm, png, jpg/jpeg).
+     * 
+     * @param fileName Output file path.
+     * @param gamma Gamma correction to apply (default 1.0).
+     * @throws std::invalid_argument if the extension is unsupported.
+     */
     void save(std::string fileName, float gamma = 1.0f) {
         auto extension = std::filesystem::path(fileName).extension();
         if (extension == ".pfm") {writePFM(fileName); return;}
@@ -141,8 +157,14 @@ private:
         }
     }
 
-    //@brief converts the pixels to 1 byte ints from 0 to 255;
-    //@brief the HDR pixels must be normalized before calling this function
+    /**
+     * @brief Converts HDR pixel data to low dynamic range (LDR) 8-bit per channel format.
+     * 
+     * Must normalize pixels before calling.
+     * 
+     * @param gamma Gamma correction value (default 1.0).
+     * @return std::vector<uint8_t> Vector of bytes representing the LDR pixel data.
+     */
     std::vector<uint8_t> pixelsToLDR(float gamma = 1.0f) {
         int length = _width * _height;
         std::vector<uint8_t> data(3 * length);
@@ -172,10 +194,17 @@ private:
         }
     }
 
+    /**
+    * @brief Writes the HDR image to a PNG file applying gamma correction.
+    * 
+    * Uses the stb_image_write library to save the image.
+    * Converts the internal HDR floating-point pixel data to 8-bit per channel LDR format
+    * with gamma correction before writing.
+    * 
+    * @param fileName The output PNG file path.
+    * @param gamma The gamma correction value to apply (default is 1.0, meaning no correction).
+    */
     void writePNG(std::string fileName, float gamma = 1.0f) {
-        // to use stbi_write we need to convert string to char* and vector to pointer
-        // 3 * width is the distance in bytes between the first byte of a row and
-        // the first one of the next, 1 byte per uint8, 3 floats per color
         stbi_write_png(fileName.c_str(), _width, _height, 3, &pixelsToLDR(gamma)[0], 3 * _width);
     }
 
