@@ -6,6 +6,9 @@
 #include <sstream>
 #include "utils.hpp"
 
+/**
+ * @brief Structure representing a 3D vector with coordinates (x, y, z).
+ */
 struct Vec3 {
     float x, y, z;
 

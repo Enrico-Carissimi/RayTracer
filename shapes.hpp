@@ -39,6 +39,9 @@ protected:
     std::shared_ptr<Material> _material;
 };
 
+/**
+ * @brief Sphere shape represented by unit sphere transformed by a transformation.
+ */
 class Sphere : public Shape {
 public:
     Sphere(std::shared_ptr<Material> material = std::make_shared<DiffuseMaterial>(DiffuseMaterial()), const Transformation& t = Transformation()) : Shape(material, t) {}
@@ -98,6 +101,9 @@ public:
     }
 };
 
+/**
+ * @brief Plane shape represented as the XY plane at z=0 transformed by a transformation.
+ */
 class Plane : public Shape {
 public:
     Plane(std::shared_ptr<Material> material = std::make_shared<DiffuseMaterial>(DiffuseMaterial()), const Transformation& t = Transformation()) : Shape(material, t) {}

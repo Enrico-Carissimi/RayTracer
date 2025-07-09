@@ -8,6 +8,10 @@
 #include "HitRecord.hpp"
 #include "Point3.hpp"
 
+
+/**
+ * @brief Represents a point light source in the scene.
+ */
 struct PointLight {
     Point3 position;
     Color color;
@@ -17,6 +21,9 @@ struct PointLight {
         : position(pos), color(col), linearRadius(radius) {}
 };
 
+/**
+ * @brief The world contains shapes and lights and handles ray intersections.
+ */
 class World {
 public:
     Color backgroundColor;

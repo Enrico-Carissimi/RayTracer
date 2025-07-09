@@ -5,8 +5,9 @@
 #include "Point3.hpp"
 #include "Normal3.hpp"
 
-
-
+/**
+ * @brief Enum to represent coordinate axes for rotations and scaling.
+ */
 enum class Axis {X, Y, Z};
 
 const float IDENTITY4[16] = {1., 0., 0., 0.,
@@ -26,8 +27,11 @@ inline void matrixMult(const float A[16], const float B[16], float result[16]) {
     }
 }
 
-
-
+/**
+ * @brief Class representing a 3D affine transformation with forward and inverse matrices.
+ * 
+ * Supports application to vectors, points, normals, and composition of transformations.
+ */
 class Transformation {
 public:
     float matrix[16] = {0.}, inverseMatrix[16] = {0.};
@@ -89,8 +93,6 @@ public:
     
     
 };
-
-
 
 Transformation scaling(float x, float y, float z) {
     float mat[16] = {0.}, inv[16] = {0.};
