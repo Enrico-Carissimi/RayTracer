@@ -11,15 +11,12 @@
 
 #include "Color.hpp"
 #include "PFMreader.hpp"
+#include "utils.hpp"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION // needed for stb
 #include "lib/stb_image_write.h"
 
 
-
-float clamp(float x) {
-    return x / (1 + x);
-}
 
 /**
  * @class HDRImage
@@ -79,21 +76,21 @@ public:
      * Uses logarithmic averaging to avoid skew by very bright pixels.
      * 
      * @param delta Small constant added to avoid log(0).
-     * @return float The average luminosity.
+     * @return float
      */
-    float averageLuminosity(float delta = 1e-10) {
-        float sum = 0.0;
+    float averageLuminosity(float delta = 1e-10f) {
+        float sum = 0.0f;
         for (const Color& pixel : _pixels) {
             sum += std::log10(pixel.luminosity() + delta);
         }
 
         sum /= _pixels.size();
 
-        return std::pow(10, sum);
+        return std::pow(10.0f, sum);
     }
 
-    void normalize(float a, float luminosity = 0.0) {
-        if (luminosity == 0.0) {
+    void normalize(float a, float luminosity = 0.0f) {
+        if (luminosity == 0.0f) {
             luminosity = averageLuminosity();
         }
 
@@ -114,7 +111,7 @@ public:
     }
 
     /**
-     * @brief Saves the image to a file, format chosen by file extension (pfm, png, jpg/jpeg).
+     * @brief Saves the image to a file, with format chosen by the extension (.pfm, .png, .jpg/.jpeg).
      * 
      * @param fileName Output file path.
      * @param gamma Gamma correction to apply (default 1.0).
@@ -177,6 +174,13 @@ private:
         return data;
     }
 
+    /**
+     * @brief Writes the HDR image to a PFM file.
+     * 
+     * Uses little endian byte order.
+     * 
+     * @param fileName The output PNG file path.
+     */
     void writePFM(std::string fileName) {
         std::ofstream output(fileName, std::ios::binary);
 
@@ -208,6 +212,16 @@ private:
         stbi_write_png(fileName.c_str(), _width, _height, 3, &pixelsToLDR(gamma)[0], 3 * _width);
     }
 
+    /**
+    * @brief Writes the HDR image to a JPEG file applying gamma correction.
+    * 
+    * Uses the stb_image_write library to save the image.
+    * Converts the internal HDR floating-point pixel data to 8-bit per channel LDR format
+    * with gamma correction before writing.
+    * 
+    * @param fileName The output PNG file path.
+    * @param gamma The gamma correction value to apply (default is 1.0, meaning no correction).
+    */
     void writeJPG(std::string fileName, float gamma = 1.0f) {
         // the last parameter is image quality, 100 is max
         stbi_write_jpg(fileName.c_str(), _width, _height, 3, &pixelsToLDR(gamma)[0], 100);

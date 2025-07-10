@@ -14,7 +14,9 @@ inline constexpr float INF = std::numeric_limits<float>::infinity();
 
 
 
-inline float degToRad(float degrees){return degrees * PI / 180.;}
+inline float degToRad(float degrees){ return degrees * PI / 180.; }
+
+inline float clamp(float x) { return x / (1 + x); }
 
 inline bool areClose(float a, float b, float epsilon = 1e-5f) {
     return std::fabs(a - b) < epsilon;
@@ -111,8 +113,6 @@ public:
 
 
 
-// from https://graphics.pixar.com/library/OrthonormalB/paper.pdf
-// 
 /**
  * @brief Generate an ortho-normal basis from a vector.
  * 
