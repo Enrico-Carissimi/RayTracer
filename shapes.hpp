@@ -17,7 +17,7 @@ inline Normal3 sphereNormal(const Point3& point, const Vec3& rayDir) {
 inline Vec2 sphereUV(const Point3& point) {
     float u = std::atan2(point.y, point.x) / (2.0f * PI);
     u += (u < 0.); // if (u < 0.) u += 1;
-    float v = std::acos(point.z) / PI;
+    float v = std::acos(std::clamp(point.z, -1.0f, 1.0f)) / PI;
     return Vec2(u, v);
 }
 
