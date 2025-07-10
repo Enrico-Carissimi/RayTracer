@@ -60,7 +60,7 @@ public:
     }
 };
 
-std::ostream& operator<<(std::ostream& stream, const Color& color) {
+inline std::ostream& operator<<(std::ostream& stream, const Color& color) {
     return stream << "Color (r = " << color.r << ", g = " << color.g << ", b = " << color.b << ")";
 }
 

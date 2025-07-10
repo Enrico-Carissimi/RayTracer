@@ -7,7 +7,7 @@
 #include "utils.hpp"
 
 /**
- * @brief Structure representing a 3D vector with coordinates (x, y, z).
+ * @brief Represents a 3D vector with coordinates (x, y, z).
  */
 struct Vec3 {
     float x, y, z;
@@ -58,6 +58,6 @@ inline Vec3 cross(const Vec3& v, const Vec3& u) {
     };
 }
 
-std::ostream& operator<<(std::ostream& stream, const Vec3& v) { return stream << v.toString(); }
+inline std::ostream& operator<<(std::ostream& stream, const Vec3& v) { return stream << v.toString(); }
 
 #endif

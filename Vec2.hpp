@@ -7,7 +7,7 @@
 #include "utils.hpp"
 
 /**
- * @brief Structure representing a 2D vector with coordinates (u, v).
+ * @brief Represents a 2D vector with coordinates (u, v).
  */
 struct Vec2 {
     float u, v;

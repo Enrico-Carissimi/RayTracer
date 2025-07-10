@@ -94,35 +94,42 @@ public:
     
 };
 
-Transformation scaling(float x, float y, float z) {
+// scaling
+inline Transformation scaling(float x, float y, float z) {
     float mat[16] = {0.}, inv[16] = {0.};
     mat[0] = x, mat[5] = y, mat[10] = z, mat[15] = 1.;
     inv[0] = 1. / x, inv[5] = 1. / y, inv[10] = 1. / z, inv[15] = 1.;
     return Transformation(mat, inv);
 }
-Transformation scaling(const Vec3& vec) {
+
+inline Transformation scaling(const Vec3& vec) {
     return scaling(vec.x, vec.y, vec.z);
 }
-Transformation scaling(float s, Axis axis) {
+
+inline Transformation scaling(float s, Axis axis) {
     if (axis == Axis::X) return scaling(s, 1., 1.);
     if (axis == Axis::Y) return scaling(1., s, 1.);
     return scaling(1., 1., s); // Z
 }
-Transformation scaling(float s) {
+
+inline Transformation scaling(float s) {
     return scaling(s, s, s);
 }
 
-Transformation translation(float x, float y, float z) {
+// translations
+inline Transformation translation(float x, float y, float z) {
     Transformation trasl(IDENTITY4, IDENTITY4);
     trasl.matrix[3] = x, trasl.matrix[7] = y, trasl.matrix[11] = z;
     trasl.inverseMatrix[3] = -x, trasl.inverseMatrix[7] = -y, trasl.inverseMatrix[11] = -z;
     return trasl;
 }
-Transformation translation(const Vec3& vec) {
+
+inline Transformation translation(const Vec3& vec) {
     return translation(vec.x, vec.y, vec.z);
 }
 
-Transformation rotation(float angle, Axis axis) {
+// rotation
+inline Transformation rotation(float angle, Axis axis) {
     float mat[16] = {0.}, inv[16] = {0.};
     mat[15] = 1., inv[15] = 1.; // element [3][3] is always 1
 

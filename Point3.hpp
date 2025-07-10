@@ -52,6 +52,6 @@ struct Point3 {
     }
 };
 
-std::ostream& operator<<(std::ostream& stream, const Point3& p) { return stream << p.toString(); }
+inline std::ostream& operator<<(std::ostream& stream, const Point3& p) { return stream << p.toString(); }
 
 #endif
