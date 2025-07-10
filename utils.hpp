@@ -7,19 +7,20 @@
 #include <string>
 #include <cstdint>
 #include <limits>
+#include <numbers>
 
-#define PI 3.1415926535897932385
-const float INF = std::numeric_limits<float>::infinity();
+inline constexpr float PI = std::numbers::pi_v<float>; // c++20
+inline constexpr float INF = std::numeric_limits<float>::infinity();
 
 
 
 inline float degToRad(float degrees){return degrees * PI / 180.;}
 
-bool areClose(float a, float b, float epsilon = 1e-5f) {
+inline bool areClose(float a, float b, float epsilon = 1e-5f) {
     return std::fabs(a - b) < epsilon;
 }
 
-bool areCloseMatrix(const float A[16], const float B[16], float epsilon = 1e-4f) {
+inline bool areCloseMatrix(const float A[16], const float B[16], float epsilon = 1e-4f) {
     for (int i = 0; i < 16; i++) {
         if (!areClose(A[i], B[i], epsilon)) return false;
     }
@@ -27,12 +28,12 @@ bool areCloseMatrix(const float A[16], const float B[16], float epsilon = 1e-4f)
 }
 
 template <typename T1>
-bool areClose(const T1& v, const T1& u, float epsilon = 1e-5f) {
+inline bool areClose(const T1& v, const T1& u, float epsilon = 1e-5f) {
     return (areClose(v.x, u.x, epsilon) && areClose(v.y, u.y, epsilon) && areClose(v.z, u.z, epsilon));
 }
 
-// utilities for the lexer
-bool isCharSkippable(const char& c) {
+// utility for the lexer
+inline bool isCharSkippable(const char& c) {
     return (c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '#');
 }
 
@@ -45,10 +46,10 @@ bool isCharSkippable(const char& c) {
  * and to test in release mode, since normal asserts are discarded.
  * The starting "s" stands for "simple".
  * 
- * @param expr the expression to evaluate
- * @param loc automatic, the place in the source code where sassert is called
+ * @param expr The expression to evaluate.
+ * @param loc Automatic, the place in the source code where sassert is called.
  */
-void sassert(bool expr, const std::source_location loc = std::source_location::current()) {
+inline void sassert(bool expr, const std::source_location loc = std::source_location::current()) {
     if (!expr) {
         std::cout << "ERROR: assertion failed in function \"" << loc.function_name() << "\", in file \"" << loc.file_name() << "\" on line " << loc.line() << std::endl;
         exit(-1);
@@ -56,7 +57,7 @@ void sassert(bool expr, const std::source_location loc = std::source_location::c
 }
 
 /**
- * @brief tests if an exception is thrown by a function with the specified parameter
+ * @brief Tests if an exception is thrown by a function with the specified parameter.
  * 
  * if the function accepts more parameters, or if it is a constructor, use a lambda:
  * testException(parameter, [](Parameter p) -> {return function(p, [...]);});
@@ -76,6 +77,12 @@ void testException(Parameter& parameter, Function function) {
 
 
 
+/**
+ * @brief Permuted congruential generator, RNG used instead of the default one.
+ * 
+ * See https://www.pcg-random.org/.
+ * 
+ */
 class PCG {
 public:
     uint64_t state;
@@ -98,18 +105,27 @@ public:
     }
 
     float random() {
-
         return randomUint32() / static_cast<float>(0xffffffffU);
-
     }
 };
 
 
 
 // from https://graphics.pixar.com/library/OrthonormalB/paper.pdf
-// n must be normalized
+// 
+/**
+ * @brief Generate an ortho-normal basis from a vector.
+ * 
+ * From https://graphics.pixar.com/library/OrthonormalB/paper.pdf.
+ * "n" must be normalized.
+ * 
+ * @tparam T 
+ * @param n First versor of the base, local z axis, must be normalized.
+ * @param b1 Holds the return value of the second versor.
+ * @param b2 Holds the return value of the third versor.
+ */
 template<typename T>
-void createONB(const T &n, T &b1, T &b2) {
+inline void createONB(const T &n, T &b1, T &b2) {
     float sign = copysignf(1.0f, n.z);
     const float a = -1.0f / (sign + n.z);
     const float b = n.x * n.y * a;
