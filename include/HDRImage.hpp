@@ -14,7 +14,7 @@
 #include "utils.hpp"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION // needed for stb
-#include "lib/stb_image_write.h"
+#include "stb_image_write.h"
 
 
 
