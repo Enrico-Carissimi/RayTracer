@@ -13,7 +13,6 @@
 #include "PFMreader.hpp"
 #include "utils.hpp"
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION // needed for stb
 #include "stb_image_write.h"
 
 
@@ -78,29 +77,9 @@ public:
      * @param delta Small constant added to avoid log(0).
      * @return float
      */
-    float averageLuminosity(float delta = 1e-10f) {
-        float sum = 0.0f;
-        for (const Color& pixel : _pixels) {
-            sum += std::log10(pixel.luminosity() + delta);
-        }
+    float averageLuminosity(float delta = 1e-10f);
 
-        sum /= _pixels.size();
-
-        return std::pow(10.0f, sum);
-    }
-
-    void normalize(float a, float luminosity = 0.0f) {
-        if (luminosity == 0.0f) {
-            luminosity = averageLuminosity();
-        }
-
-        // calculate the scale factor
-        float scale = a / luminosity;
-
-        for (Color& pixel: _pixels) {
-            pixel = pixel * scale;
-        }
-    }
+    void normalize(float a, float luminosity = 0.0f);
 
     void clamp() {
         for (Color& pixel: _pixels) {
@@ -130,29 +109,12 @@ public:
 private:
     std::vector<Color> _pixels;
 
-    void readPFM(std::istream& input) {
-        // magic
-        std::string magic = readLine(input);
-        if (magic != "PF") {
-            throw std::invalid_argument("ERROR: invalid magic string \"" + magic + "\", must be \"PF\" for a PFM file");
-        }
-        
-        // image dimensions (width, height)
-        auto [width, height] = parseImageSize(readLine(input)); // maybe [_width, _height] = ... works?
-        _width = width, _height = height;
-    
-        // endianness
-        auto endianness = parseEndianness(readLine(input));
-        
-        // fill the image
-        _pixels = std::vector<Color>(_width * _height);
-        for (int j = _height - 1; j >= 0; j--) {
-            for (int i = 0; i < _width; i++) {
-                float r = readFloat(input, endianness), g = readFloat(input, endianness), b = readFloat(input, endianness);
-                setPixel(i, j, Color(r, g, b)); // readFloat can't be called inside the constructor because r, g, b are not evaluated in order
-            }
-        }
-    }
+    /**
+     * @brief Reads a PFM file from a stream and loads the image pixels.
+     * 
+     * @param input The input stream.
+     */
+    void readPFM(std::istream& input);
 
     /**
      * @brief Converts HDR pixel data to low dynamic range (LDR) 8-bit per channel format.
@@ -162,17 +124,7 @@ private:
      * @param gamma Gamma correction value (default 1.0).
      * @return std::vector<uint8_t> Vector of bytes representing the LDR pixel data.
      */
-    std::vector<uint8_t> pixelsToLDR(float gamma = 1.0f) {
-        int length = _width * _height;
-        std::vector<uint8_t> data(3 * length);
-        for (int i = 0; i < length; i++) {
-            data[3 * i] = (255 * std::pow(_pixels[i].r, gamma));
-            data[3 * i + 1] = (255 * std::pow(_pixels[i].g, gamma));
-            data[3 * i + 2] = (255 * std::pow(_pixels[i].b, gamma));
-        }
-
-        return data;
-    }
+    std::vector<uint8_t> pixelsToLDR(float gamma = 1.0f);
 
     /**
      * @brief Writes the HDR image to a PFM file.
@@ -181,22 +133,7 @@ private:
      * 
      * @param fileName The output PNG file path.
      */
-    void writePFM(std::string fileName) {
-        std::ofstream output(fileName, std::ios::binary);
-
-        // write header, always little endian
-        output << "PF\n" << _width << " " << _height << "\n-1.0\n";
-
-        // write pixels
-        for (int j = _height - 1; j >= 0; j--) {
-            for (int i = 0; i < _width; i++) {
-                auto pixel = getPixel(i, j);
-                writeFloat(output, pixel.r, Endianness::LITTLE);
-                writeFloat(output, pixel.g, Endianness::LITTLE);
-                writeFloat(output, pixel.b, Endianness::LITTLE);
-            }
-        }
-    }
+    void writePFM(std::string fileName);
 
     /**
     * @brief Writes the HDR image to a PNG file applying gamma correction.
