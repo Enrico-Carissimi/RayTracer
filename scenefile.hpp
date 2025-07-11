@@ -22,8 +22,8 @@
 /**
  * @brief Registry that manages unique file names by storing and indexing them.
  * 
- * Provides static methods to register a filename and retrieve a filename by its index.
- * Used to avoid duplicating file names and to reference files by integer IDs.
+ * Provides static methods to register a filename and retrieve it by its index.
+ * Used to avoid duplicating file names in each token and to reference files by integer IDs.
  */
 struct FileRegistry {
 public:
@@ -44,6 +44,8 @@ private:
 };
 
 inline std::vector<std::string> FileRegistry::_files = {};
+
+
 
 /**
  * @brief Represents a source code location with line and column numbers.
@@ -66,7 +68,9 @@ private:
     int _fileIndex; // index into FileRegistry
 };
 
-const std::string SYMBOLS = ",()[]<>*";
+
+
+inline constexpr std::string SYMBOLS = ",()[]<>*"; // this _should_ work in c++20, with g++ 12.2.0 it does
 
 /**
  * @brief Enumeration of all recognized keywords in the scene file format.
@@ -111,17 +115,12 @@ const std::unordered_map<std::string, Keywords> KEYWORDS {
     {"specular", Keywords::SPECULAR}
 };
 
-/**
- * @brief Custom hash function to enable using enum class types as keys in unordered_map.
- * 
- * Enum classes do not have a default hash function, so this struct provides a
- * templated hash operator that casts the enum to its underlying integer type.
- * 
- * Usage: This allows Keywords enum values to be used as keys in unordered_maps.
- */
-// from https://stackoverflow.com/questions/18837857/cant-use-enum-class-as-unordered-map-key
-struct _EnumClassHash {     // we need a custom hash functin to use
-    template <typename T>   // user defined data as map keys
+// From https://stackoverflow.com/questions/18837857/cant-use-enum-class-as-unordered-map-key.
+// Custom hash function to enable using user-defined types (enum class) as keys in a map
+// Enum classes do not have a default hash function, so this struct provides a
+// templated hash operator that casts the enum to its underlying integer type.
+struct _EnumClassHash {
+    template <typename T>
     std::size_t operator()(T t) const {
         return static_cast<std::size_t>(t);
     }
@@ -158,12 +157,11 @@ enum class TokenTags {
  * @brief Union to hold the actual value of a token.
  * 
  * Can store:
- * - Keywords enum value for keywords,
- * - std::string for identifiers and string literals,
- * - float for numeric literals,
+ * - Keywords enum value for keywords;
+ * - std::string for identifiers and string literals;
+ * - float for numeric literals;
  * - char for symbols.
- * 
- * Constructors and destructor manage initialization and cleanup.
+ *
  */
 union TokenUnion {
     Keywords keyword;
@@ -258,13 +256,13 @@ struct Token {
     }
 };
 
+
+
 /**
  * @brief Exception class for reporting grammar errors during parsing.
  * 
  * Stores the location (file, line, column) of the error along with a descriptive message.
- * The full error message is constructed by combining the location info and the message.
  * 
- * Overrides std::exception::what() to return the full error description.
  */
 class GrammarError : public std::exception {
 public:
@@ -286,13 +284,15 @@ private:
     std::string _fullMessage;
 };
 
+
+
 /**
  * @brief A helper class for reading characters and tokens from an input stream,
  *        tracking source location (file, line, column) for error reporting.
  * 
- * Supports reading characters, unread characters (putting them back), peeking,
- * reading tokens (keywords, identifiers, literals, symbols), and unread tokens.
- * Also handles skipping whitespace and comments.
+ * Supports reading, unreading and peeking characters,
+ * reading and unreading tokens (keywords, identifiers, literals, symbols).
+ * Also handles skipping whitespaces and comments.
  */
 class InputStream {
 public:
@@ -302,21 +302,21 @@ public:
         : _location(FileRegistry::registerFile(fileName), 1, 1), _stream(stream), _tabs(tabs), _savedLocation() {}
 
     /**
-     * @brief Reads a character from the stream
+     * @brief Reads a character from the stream.
      * 
      * @return char 
      */
     char read();
 
     /**
-     * @brief Puts the last character read back in the stream
+     * @brief Puts the last character read back in the stream.
      * 
-     * @param c the character to put back
+     * @param c The character to put back.
      */
     void unread(const char& c);
 
     /**
-     * @brief Looks ahead one character without extracting it from the stream
+     * @brief Looks ahead one character without extracting it from the stream.
      * 
      * @return char
      */
@@ -328,14 +328,14 @@ public:
     }
 
     /**
-     * @brief Reads a token from the stream (keyword, variable identifier, string or number literal, symbol, or EOF)
+     * @brief Reads a token from the stream (keyword, variable identifier, string or number literal, symbol, or EOF).
      * 
      * @return Token 
     */
     Token readToken ();
 
     /**
-     * @brief Puts the last token read back in the stream
+     * @brief Puts the last token read back in the stream.
      * 
      * @param token the token to put back
      */
@@ -394,7 +394,7 @@ public:
     Scene() {}
     Scene(std::string fileName, const std::unordered_map<std::string, float>& variables = std::unordered_map<std::string, float>()) {
         std::ifstream file(fileName);
-        if (file.fail()) { //in the main we already check using CLI11, but you never know
+        if (file.fail()) { // in the main we already check using CLI11, but you never know
             std::cout << "ERROR: impossible to open file \"" + fileName + "\"" << std::endl;
             exit(-1);
         }
