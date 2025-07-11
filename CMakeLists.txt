@@ -9,7 +9,7 @@ target_compile_features(compilerFlags INTERFACE cxx_std_20)
 
 # add the executable
 add_executable(RayTracer src/main.cpp)
-target_include_directories(RayTracer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+target_include_directories(RayTracer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/external)
 target_link_libraries(RayTracer PUBLIC compilerFlags)
 
 # testing
@@ -17,7 +17,7 @@ target_link_libraries(RayTracer PUBLIC compilerFlags)
 # add test executables and add tests
 function(custom_add_test testName fileName)
     add_executable(${testName} "${CMAKE_CURRENT_SOURCE_DIR}/test/${fileName}.cpp")
-    target_include_directories(${testName} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+    target_include_directories(${testName} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/external)
     target_link_libraries(${testName} PUBLIC compilerFlags)
     add_test(NAME ${testName} COMMAND ${testName})
 endfunction()
