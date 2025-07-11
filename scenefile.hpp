@@ -70,7 +70,7 @@ private:
 
 
 
-inline constexpr std::string SYMBOLS = ",()[]<>*"; // this _should_ work in c++20, with g++ 12.2.0 it does
+const std::string SYMBOLS = ",()[]<>*";
 
 /**
  * @brief Enumeration of all recognized keywords in the scene file format.
