@@ -2,7 +2,7 @@
 #include "World.hpp"
 #include "renderers.hpp"
 #include "scenefile.hpp"
-#include "lib/CLI11.hpp"
+#include "CLI11.hpp"
 
 
 
