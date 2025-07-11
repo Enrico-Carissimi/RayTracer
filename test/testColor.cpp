@@ -1,6 +1,6 @@
 #include <iostream>
-#include "../Color.hpp"
-#include "../utils.hpp"
+#include "Color.hpp"
+#include "utils.hpp"
 
 int main() {
     Color color(1.0f, 2.0f, 3.0f);

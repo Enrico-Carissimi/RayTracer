@@ -1,6 +1,6 @@
 #include <iostream>
-#include "../shapes.hpp"
-#include "../World.hpp"
+#include "shapes.hpp"
+#include "World.hpp"
 
 using std::cout, std::endl;
 

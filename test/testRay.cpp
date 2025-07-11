@@ -1,8 +1,8 @@
 #include <iostream>
 #include <cmath>
-#include "../Ray.hpp"
-#include "../Point3.hpp"
-#include "../Vec3.hpp"
+#include "Ray.hpp"
+#include "Point3.hpp"
+#include "Vec3.hpp"
 
 void testIsClose() {
     
