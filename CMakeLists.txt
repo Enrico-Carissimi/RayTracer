@@ -3,22 +3,31 @@ cmake_minimum_required(VERSION 3.31.6)
 project(RayTracer VERSION 1.0.0
         DESCRIPTION "Simple ray tracer for a university project")
 
-# specify the C++ standard
+# specify the C++ standard with an interface library
 add_library(compilerFlags INTERFACE)
 target_compile_features(compilerFlags INTERFACE cxx_std_20)
+
+
+
+# library containing all cpp files (other than the main)
+add_library(raylib src/scenefile.cpp src/PFMReader.cpp src/HDRImage.cpp)
+target_include_directories(raylib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/external)
+target_link_libraries(raylib PUBLIC compilerFlags)
 
 # add the executable
 add_executable(RayTracer src/main.cpp)
 target_include_directories(RayTracer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/external)
-target_link_libraries(RayTracer PUBLIC compilerFlags)
+target_link_libraries(RayTracer PUBLIC compilerFlags raylib)
+
+
 
 # testing
 
-# add test executables and add tests
+# add test executables and tests
 function(custom_add_test testName fileName)
-    add_executable(${testName} "${CMAKE_CURRENT_SOURCE_DIR}/test/${fileName}.cpp")
+    add_executable(${testName} "test/${fileName}.cpp")
     target_include_directories(${testName} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/external)
-    target_link_libraries(${testName} PUBLIC compilerFlags)
+    target_link_libraries(${testName} PUBLIC compilerFlags raylib)
     add_test(NAME ${testName} COMMAND ${testName})
 endfunction()
 
