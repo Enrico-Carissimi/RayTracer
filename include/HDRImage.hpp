@@ -10,7 +10,7 @@
 #include <string>
 
 #include "Color.hpp"
-#include "PFMreader.hpp"
+#include "PFMReader.hpp"
 #include "utils.hpp"
 
 #include "stb_image_write.h"
