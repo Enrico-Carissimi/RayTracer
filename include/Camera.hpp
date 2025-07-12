@@ -17,10 +17,10 @@ using _CastRay = Ray(float u, float v, float d, float a);
 /**
  * @brief Casts a ray using an orthogonal projections.
  * 
- * @param u horizontal coordinate of the image
- * @param v vertical coordinate of the image
- * @param d distance of the observer from the image, unused
- * @param a aspect ratio of the image
+ * @param u Horizontal coordinate of the image.
+ * @param v Vertical coordinate of the image.
+ * @param d Distance of the observer from the image, always 1 for orthogonal projection.
+ * @param a Aspect ratio of the image.
  * @return Ray 
  */
 inline Ray _castOrthogonal(float u, float v, float d, float a) {
@@ -32,10 +32,10 @@ inline Ray _castOrthogonal(float u, float v, float d, float a) {
 /**
  * @brief Casts a ray using a perspective projections.
  * 
- * @param u horizontal coordinate of the image
- * @param v vertical coordinate of the image
- * @param d distance of the observer from the image, defines the FOV
- * @param a aspect ratio of the image
+ * @param u Horizontal coordinate of the image.
+ * @param v Vertical coordinate of the image.
+ * @param d Distance of the observer from the image, defines the FOV.
+ * @param a Aspect ratio of the image.
  * @return Ray 
  */
 inline Ray _castPerspective(float u, float v, float d, float a) {
@@ -62,12 +62,12 @@ public:
     /**
      * @brief Construct a new Camera object.
      * 
-     * @param type "orthogonal" or "perspective", to use orthogonal or perspective camera projections
+     * @param type Valid types are "orthogonal" or "perspective", to use orthogonal or perspective camera projections.
      * @param aspectRatio 
-     * @param imageWidth in pixels
-     * @param distance the distance between the camera and the image (perspective only)
-     * @param transformation used to move the camera around the scene
-     * @param pcg the random number generator
+     * @param imageWidth In pixels.
+     * @param distance The distance between the camera and the image (perspective only).
+     * @param transformation Used to move the camera around the scene.
+     * @param pcg The random number generator.
      */
     Camera(std::string type, float aspectRatio, int imageWidth, float distance = 1.0f, Transformation transformation = Transformation(), PCG pcg = PCG()) :
     aspectRatio(aspectRatio), imageWidth(imageWidth), imageHeight(imageWidth / aspectRatio),
@@ -92,10 +92,10 @@ public:
      * u and v range from 0 to 1 and are then mapped in [-1, 1]. The top-left corner is (1, 0), the bottom right is (0, 1).
      * (uPixel, vPixel) is the position inside the pixel, (0.5, 0.5) is the centre.
      * 
-     * @param i horizontal coordinate of the pixel
-     * @param j vertical coordinate of the pixel
-     * @param uPixel horizontal coordinate inside the pixel
-     * @param vPixel vertical coordinate inside the pixel
+     * @param i Horizontal coordinate of the pixel.
+     * @param j Vertical coordinate of the pixel.
+     * @param uPixel Horizontal coordinate inside the pixel.
+     * @param vPixel Vertical coordinate inside the pixel.
      * @return Ray 
      */
     inline Ray castRay(int i, int j, float uPixel = 0.5f, float vPixel = 0.5f) const {
@@ -109,9 +109,9 @@ public:
      * 
      * @tparam Renderer 
      * @tparam Args 
-     * @param renderer algorithm used to render the image
-     * @param AASamples number of samples per pixel used for anti-aliasing
-     * @param args additional arguments needed by "renderer", the first is always the World to render
+     * @param renderer Algorithm used to render the image.
+     * @param AASamples Number of samples per pixel used for anti-aliasing.
+     * @param args Additional arguments needed by "renderer", the first is always the World to render.
      */
     template <typename Function, typename... Args>
     void render(const Function& renderer, int AASamples, Args&&... args) { // first arg should be the world
@@ -119,14 +119,22 @@ public:
         bool squareAA = (AASamplesRoot * AASamplesRoot == AASamples);
 
         auto start = std::chrono::steady_clock::now();
+        auto lastFlush = start;
+        float timeSinceLastFlush = 1.0f;
 
         for (int j = 0; j < imageHeight; j++) {
-            std::cout << "\rdrawing row " << j + 1 << "/" << imageHeight << std::flush;
+
+            // print progress every 0.5 s
+            if (timeSinceLastFlush > 0.5f) {
+                std::cout << "\rdrawing row " << j + 1 << "/" << imageHeight << std::flush;
+                lastFlush = std::chrono::steady_clock::now();
+            }
+            timeSinceLastFlush = std::chrono::duration<float>(std::chrono::steady_clock::now() - lastFlush).count();
 
             for (int i = 0; i < imageWidth; i++) {
                 // After some tests, moving the ifs outside the loops
-                // result in a negligible (or even absent) improvement in speed.
-                // The code is more readable and simpler this way
+                // results in a negligible (or even absent) improvement in speed.
+                // The code is more readable and simpler this way.
 
                 // no antialiasing
                 if (AASamples == 1) {
@@ -158,12 +166,12 @@ private:
      * 
      * @tparam Function 
      * @tparam Args 
-     * @param i pixel horizontal coordinate
-     * @param j pixel vertical coordinate
-     * @param uPixel horizontal coordinate inside the pixel
-     * @param vPixel vertical coordinate inside the pixel
-     * @param renderer algorithm used to render the image
-     * @param args additional arguments needed by "renderer", the first is always the World to render
+     * @param i Pixel horizontal coordinate.
+     * @param j Pixel vertical coordinate.
+     * @param uPixel Horizontal coordinate inside the pixel.
+     * @param vPixel Vertical coordinate inside the pixel.
+     * @param renderer Algorithm used to render the image.
+     * @param args Additional arguments needed by "renderer", the first is always the World to render.
      * @return Color 
      */
     template <typename Function, typename... Args>
@@ -173,15 +181,15 @@ private:
     }
 
     /**
-     * @brief Casts rays at random inside pixel (i, j) and averages the color.
+     * @brief Casts a number "AASamples" of rays at random inside pixel (i, j) and averages the color.
      * 
      * @tparam Function 
      * @tparam Args 
-     * @param i pixel horizontal coordinate
-     * @param j pixel vertical coordinate
-     * @param AASamples number of random samples used to compute the color of the pixel
-     * @param renderer algorithm used to render the image
-     * @param args additional arguments needed by "renderer", the first is always the World to render
+     * @param i Pixel horizontal coordinate.
+     * @param j Pixel vertical coordinate.
+     * @param AASamples Number of random samples used to compute the color of the pixel.
+     * @param renderer Algorithm used to render the image.
+     * @param args Additional arguments needed by "renderer", the first is always the World to render.
      */
     template <typename Function, typename... Args>
     void antialiasing(int i, int j, int AASamples, const Function& renderer, Args&&... args) {
@@ -195,15 +203,15 @@ private:
     }
 
     /**
-     * @brief Divides pixel (i, j) in a square grid, casts a ray randomly in each cell, then averages the color.
+     * @brief Divides pixel (i, j) in a square grid of side "side", casts a ray randomly in each cell, then averages the color.
      * 
      * @tparam Function 
      * @tparam Args 
-     * @param i pixel horizontal coordinate
-     * @param j pixel vertical coordinate
-     * @param side side of the square grid used to sample the pixel
-     * @param renderer algorithm used to render the image
-     * @param args additional arguments needed by "renderer", the first is always the World to render
+     * @param i Pixel horizontal coordinate.
+     * @param j Pixel vertical coordinate.
+     * @param side Side of the square grid used to sample the pixel.
+     * @param renderer Algorithm used to render the image.
+     * @param args Additional arguments needed by "renderer", the first is always the World to render.
      */
     template <typename Function, typename... Args>
     void stratifiedSampling(int i, int j, int side, const Function& renderer, Args&&... args) {
