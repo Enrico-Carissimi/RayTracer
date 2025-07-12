@@ -6,73 +6,9 @@
 
 
 
-/**
- * @brief validate a string in the format "name:value", where value is convertible to float
- * 
- * @param s string to validate
- * @param floatVariables container for name-value pairs
- */
-void validateFloatVariable(std::string& s, std::unordered_map<std::string, float>& floatVariables) {
-    std::string key;
-    float value;
-
-    size_t position = s.find(':');
-    if (position == std::string::npos)
-        throw std::invalid_argument("ERROR: \"" + s + "\" does not define a float variable\n"
-                                    "the correct syntax is --float=name:value");
-
-    key = s.substr(0, position);
-
-    auto stringVal = s.erase(0, position + 1);
-    try { value = std::stof(stringVal); }
-    catch (std::out_of_range& e) { throw std::out_of_range(stringVal + " is out of float range"); }
-    catch (std::invalid_argument& e) { throw std::invalid_argument(stringVal + " is not a valid number"); }
-
-    floatVariables[key] = value;
-}
-
-// Render command to generate images from scene files
+// Render command to generate images from scene files, see below for implementation
 void render(const  std::string& input, const std::string& output, int width, float aspectRatio, float a, float gamma, float luminosity, uint64_t seed, uint64_t sequence,
-            const std::vector<std::string>& floatBuffer, const std::string& algorithm, int AAsamples, int nRays, int maxDepth, int russianRouletteLimit) {
-
-    std::unordered_map<std::string, float> floatVariables;
-    for (auto s : floatBuffer) {
-        validateFloatVariable(s, floatVariables);
-    }
-
-    Scene scene(input, floatVariables);
-
-    if (scene.camera == nullptr) // default camera
-        scene.camera = std::make_shared<Camera>("perspective", 1., 100, 1., translation(-1., 0., 0.));
-    scene.camera->pcg = PCG(seed, sequence);
-
-    // reshape the image from terminal
-    if (aspectRatio > 0.) scene.camera->aspectRatio = aspectRatio;
-    if (width > 0) scene.camera->imageWidth = width;
-    if (width > 0 || aspectRatio > 0.) {
-        scene.camera->imageHeight = scene.camera->imageWidth / scene.camera->aspectRatio;
-        scene.camera->image = HDRImage(scene.camera->imageWidth, scene.camera->imageHeight);
-    }
-
-    if (algorithm == "path")
-        scene.camera->render(Renderers::PathTracer, AAsamples, scene.world, scene.camera->pcg, nRays, maxDepth, russianRouletteLimit);
-    else if (algorithm == "onoff")
-        scene.camera->render(Renderers::OnOff, AAsamples, scene.world);
-    else if (algorithm == "flat")
-        scene.camera->render(Renderers::Flat, AAsamples, scene.world);
-    else if (algorithm == "light")
-        scene.camera->render(Renderers::PointLight, AAsamples, scene.world);
-    else {
-        std::cout << "ERROR: \"" + algorithm + "\" is not a supported rendering algorithm\n" +
-                     "supported algorithms are: \"path\", \"onoff\", \"flat\", \"light\", see --help for more information" << std::endl;
-        exit(-1);
-    }
-
-    scene.camera->image.save(std::filesystem::path(output).stem().string() + ".pfm"); // saves the rendered pfm
-    scene.camera->image.normalize(a, luminosity);
-    scene.camera->image.clamp();
-    scene.camera->image.save(output, gamma);
-}
+            const std::vector<std::string>& floatBuffer, const std::string& algorithm, int AAsamples, int nRays, int maxDepth, int russianRouletteLimit);
 
 
 
@@ -135,4 +71,48 @@ int main(int argc, char* argv[]) {
     }
 
     return 0;
+}
+
+
+
+void render(const  std::string& input, const std::string& output, int width, float aspectRatio, float a, float gamma, float luminosity, uint64_t seed, uint64_t sequence,
+            const std::vector<std::string>& floatBuffer, const std::string& algorithm, int AAsamples, int nRays, int maxDepth, int russianRouletteLimit) {
+
+    std::unordered_map<std::string, float> floatVariables;
+    for (auto s : floatBuffer) {
+        validateFloatVariable(s, floatVariables);
+    }
+
+    Scene scene(input, floatVariables);
+
+    if (scene.camera == nullptr) // default camera
+        scene.camera = std::make_shared<Camera>("perspective", 1., 100, 1., translation(-1., 0., 0.));
+    scene.camera->pcg = PCG(seed, sequence);
+
+    // reshape the image from terminal
+    if (aspectRatio > 0.) scene.camera->aspectRatio = aspectRatio;
+    if (width > 0) scene.camera->imageWidth = width;
+    if (width > 0 || aspectRatio > 0.) {
+        scene.camera->imageHeight = scene.camera->imageWidth / scene.camera->aspectRatio;
+        scene.camera->image = HDRImage(scene.camera->imageWidth, scene.camera->imageHeight);
+    }
+
+    if (algorithm == "path")
+        scene.camera->render(Renderers::PathTracer, AAsamples, scene.world, scene.camera->pcg, nRays, maxDepth, russianRouletteLimit);
+    else if (algorithm == "onoff")
+        scene.camera->render(Renderers::OnOff, AAsamples, scene.world);
+    else if (algorithm == "flat")
+        scene.camera->render(Renderers::Flat, AAsamples, scene.world);
+    else if (algorithm == "light")
+        scene.camera->render(Renderers::PointLight, AAsamples, scene.world);
+    else {
+        std::cout << "ERROR: \"" + algorithm + "\" is not a supported rendering algorithm\n" +
+                     "supported algorithms are: \"path\", \"onoff\", \"flat\", \"light\", see --help for more information" << std::endl;
+        exit(-1);
+    }
+
+    scene.camera->image.save(std::filesystem::path(output).stem().string() + ".pfm"); // saves the rendered pfm
+    scene.camera->image.normalize(a, luminosity);
+    scene.camera->image.clamp();
+    scene.camera->image.save(output, gamma);
 }

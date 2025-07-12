@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <limits>
 #include <numbers>
+#include <unordered_map>
 
 inline constexpr float PI = std::numbers::pi_v<float>; // c++20
 inline constexpr float INF = std::numeric_limits<float>::infinity();
@@ -39,6 +40,32 @@ inline bool isCharSkippable(const char& c) {
     return (c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '#');
 }
 
+// utility for the render command
+/**
+ * @brief Validate a string in the format "name:value", where value is convertible to float.
+ * 
+ * @param s String to validate.
+ * @param floatVariables Container for name-value pairs.
+ */
+inline void validateFloatVariable(std::string& s, std::unordered_map<std::string, float>& floatVariables) {
+    std::string key;
+    float value;
+
+    size_t position = s.find(':');
+    if (position == std::string::npos)
+        throw std::invalid_argument("ERROR: \"" + s + "\" does not define a float variable\n"
+                                    "the correct syntax is --float=name:value");
+
+    key = s.substr(0, position);
+
+    auto stringVal = s.erase(0, position + 1);
+    try { value = std::stof(stringVal); }
+    catch (std::out_of_range& e) { throw std::out_of_range(stringVal + " is out of float range"); }
+    catch (std::invalid_argument& e) { throw std::invalid_argument(stringVal + " is not a valid number"); }
+
+    floatVariables[key] = value;
+}
+
 
 
 /**
@@ -61,13 +88,13 @@ inline void sassert(bool expr, const std::source_location loc = std::source_loca
 /**
  * @brief Tests if an exception is thrown by a function with the specified parameter.
  * 
- * if the function accepts more parameters, or if it is a constructor, use a lambda:
- * testException(parameter, [](Parameter p) -> {return function(p, [...]);});
+ * If the function accepts more parameters, or if it is a constructor, use a lambda:
+ * testException(parameter, [](Parameter p) -> {return function(p, [...]);});.
  * 
  * @tparam Parameter 
  * @tparam Function 
- * @param parameter parameter to pass to the function
- * @param function the function throwing the exeption to test
+ * @param parameter Parameter to pass to the function.
+ * @param function The function throwing the exeption to test.
  */
 template<typename Parameter, typename Function>
 void testException(Parameter& parameter, Function function) {
