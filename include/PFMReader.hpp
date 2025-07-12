@@ -1,5 +1,5 @@
-#ifndef __PFMreader__
-#define __PFMreader__
+#ifndef __PFMReader__
+#define __PFMReader__
 
 #include <iostream>
 #include <string>
