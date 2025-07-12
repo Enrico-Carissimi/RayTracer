@@ -17,7 +17,7 @@ inline Normal3 sphereNormal(const Point3& point, const Vec3& rayDir) {
 inline Vec2 sphereUV(const Point3& point) {
     float u = std::atan2(point.y, point.x) / (2.0f * PI);
     u += (u < 0.); // if (u < 0.) u += 1;
-    float v = std::acos(point.z) / PI;
+    float v = std::acos(std::clamp(point.z, -1.0f, 1.0f)) / PI;
     return Vec2(u, v);
 }
 
@@ -39,6 +39,9 @@ protected:
     std::shared_ptr<Material> _material;
 };
 
+/**
+ * @brief Sphere shape represented by unit sphere transformed by a transformation.
+ */
 class Sphere : public Shape {
 public:
     Sphere(std::shared_ptr<Material> material = std::make_shared<DiffuseMaterial>(DiffuseMaterial()), const Transformation& t = Transformation()) : Shape(material, t) {}
@@ -98,6 +101,9 @@ public:
     }
 };
 
+/**
+ * @brief Plane shape represented as the XY plane at z=0 transformed by a transformation.
+ */
 class Plane : public Shape {
 public:
     Plane(std::shared_ptr<Material> material = std::make_shared<DiffuseMaterial>(DiffuseMaterial()), const Transformation& t = Transformation()) : Shape(material, t) {}

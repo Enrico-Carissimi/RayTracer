@@ -7,12 +7,22 @@
 #include "HitRecord.hpp"
 #include <memory>
 
-class Texture { // I don't like the name "pigment"
+/**
+ * @class Texture
+ * @brief Abstract base class for texture mapping.
+ * 
+ * Provides an interface for obtaining color values at given UV coordinates.
+ */
+class Texture {
 public:
     virtual ~Texture() = default;
     virtual Color color(const Vec2& uv) const = 0;
 };
 
+/**
+ * @class UniformTexture
+ * @brief Texture that returns a uniform (constant) color.
+ */
 class UniformTexture : public Texture {
 public:
     UniformTexture() : _color(Color(0., 0., 0.)) {}
@@ -26,6 +36,10 @@ private:
     Color _color;
 };
 
+/**
+ * @class CheckeredTexture
+ * @brief Texture that generates a 2D checkered pattern.
+ */
 class CheckeredTexture : public Texture {
 public:
     CheckeredTexture() : _color1(Color(0., 0., 0.)), _color2(Color(1., 1., 1.)), _nSteps(8) {}
@@ -42,6 +56,10 @@ private:
     Color _color1, _color2;
 };
 
+/**
+ * @class ImageTexture
+ * @brief Texture based on an HDR image.
+ */
 class ImageTexture : public Texture {
 public:
     ImageTexture(const std::string& name) : _PFM(name) {_PFM.normalize(1.); _PFM.clamp();}
@@ -61,7 +79,13 @@ private:
 };
 
 
-
+/**
+ * @class Material
+ * @brief Abstract base class representing a material.
+ * 
+ * Contains texture and emitted radiance, and defines interfaces
+ * for evaluation and scattering of rays.
+ */
 class Material {
 public:
     Material() : _texture(std::make_shared<UniformTexture>(Color(0., 0., 0.))), _emittedRadiance(std::make_shared<UniformTexture>(Color(0., 0., 0.))) {};
@@ -81,6 +105,10 @@ protected:
     std::shared_ptr<Texture> _emittedRadiance;
 };
 
+/**
+ * @class DiffuseMaterial
+ * @brief Lambertian diffuse material with cosine-weighted scattering.
+ */
 class DiffuseMaterial : public Material {
 public:
     DiffuseMaterial() : Material(), _reflectance(1.) {}
@@ -107,6 +135,10 @@ private:
     float _reflectance; // is already divided by pi in the constructor
 };
 
+/**
+ * @class SpecularMaterial
+ * @brief Perfect mirror-like reflective material.
+ */
 class SpecularMaterial : public Material {
 public:
     SpecularMaterial() : Material(), _thresholdAngleRad(PI / 1800.0) {}

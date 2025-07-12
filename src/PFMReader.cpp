@@ -1,20 +1,4 @@
-#ifndef __PFMreader__
-#define __PFMreader__
-
-#include <iostream>
-#include <string>
-#include <cstdint>
-#include <cstring>
-#include <stdexcept>
-#include <sstream>
-
-#include "HDRImage.hpp"
-
-
-
-enum class Endianness {LITTLE, BIG};
-
-
+#include "PFMReader.hpp"
 
 float readFloat(std::istream& stream, Endianness endianness) {
     uint8_t bytes[4];
@@ -37,7 +21,6 @@ float readFloat(std::istream& stream, Endianness endianness) {
     return result;
 }
 
-// from prof. Tomasi lecture (adapted code style)
 void writeFloat(std::ostream& stream, float value, Endianness endianness) {
     // Convert "value" in a sequence of 32 bit
     uint32_t doubleWord{*((uint32_t*) &value)};
@@ -57,8 +40,6 @@ void writeFloat(std::ostream& stream, float value, Endianness endianness) {
         for (int i{3}; i >= 0; --i) stream << bytes[i]; break; // Backward loop
     }
 }
-
-
 
 std::string readLine(std::istream& stream) {
     std::string buffer;
@@ -96,5 +77,3 @@ enum Endianness parseEndianness(const std::string& line) {
     if (endianness < 0.0f) return Endianness::LITTLE;
     throw std::invalid_argument("ERROR: endianness must be non-zero");
 }
-
-#endif

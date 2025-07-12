@@ -1,6 +1,6 @@
 #include <iostream>
-#include "../materials.hpp"
-#include "../utils.hpp"
+#include "materials.hpp"
+#include "utils.hpp"
 
 void testUniformTexture() {
     Color color(1., 2., 3.);

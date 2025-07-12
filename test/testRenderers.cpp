@@ -1,6 +1,6 @@
-#include "../Camera.hpp"
-#include "../renderers.hpp"
-#include "../utils.hpp"
+#include "Camera.hpp"
+#include "renderers.hpp"
+#include "utils.hpp"
 
 const Color BLACK(0.0f, 0.0f, 0.0f);
 const Color WHITE(1.0f, 1.0f, 1.0f);

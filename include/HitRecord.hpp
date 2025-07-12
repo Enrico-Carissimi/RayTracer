@@ -11,6 +11,17 @@
 
 class Material;
 
+/**
+ * @struct HitRecord
+ * @brief Stores information about a ray-object intersection.
+ * 
+ * Contains the point of intersection in world coordinates, the surface normal at the hit point,
+ * texture coordinates on the surface, the parameter t along the ray where the hit occurred,
+ * the ray itself, and a shared pointer to the material of the intersected object.
+ * 
+ * Also provides a utility function to compare if two HitRecords are approximately equal,
+ * considering floating point tolerances.
+ */
 struct HitRecord {
 
     Point3 worldPoint;

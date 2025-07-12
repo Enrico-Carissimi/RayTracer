@@ -1,8 +1,8 @@
 #include <iostream>
-#include "../Vec3.hpp" 
-#include "../Point3.hpp"  
-#include "../Normal3.hpp" 
-#include "../Transformation.hpp" 
+#include "Vec3.hpp" 
+#include "Point3.hpp"  
+#include "Normal3.hpp" 
+#include "Transformation.hpp" 
 
 
 void testVec3operations() {

@@ -6,16 +6,41 @@
 
 namespace Renderers {
 
+/**
+ * @brief Simple on/off renderer: returns white if the ray hits anything, black otherwise.
+ * 
+ * @param ray Ray to test for intersection.
+ * @param world Scene containing objects.
+ * @return Color White if hit, black otherwise.
+ */
 auto OnOff = [](const Ray& ray, const World& world) {
     HitRecord rec;
     return world.isHit(ray, rec) ? Color(1., 1., 1.) : Color(0., 0., 0.);
 };
 
+/**
+ * @brief Flat renderer: returns the flat color of the material if hit, otherwise background color.
+ * 
+ * @param ray Ray to test for intersection.
+ * @param world Scene containing objects.
+ * @return Color Material color at hit point or background color.
+ */
 auto Flat = [](const Ray& ray, const World& world) {
     HitRecord rec;
     return world.isHit(ray, rec) ? rec.material->color(rec.surfacePoint) : world.backgroundColor;
 };
 
+/**
+ * @brief Path tracer renderer using recursive Monte Carlo integration with Russian roulette termination.
+ * 
+ * @param ray Ray to trace.
+ * @param world Scene containing objects and lights.
+ * @param pcg Pseudo-random number generator.
+ * @param nRays Number of rays per bounce for Monte Carlo sampling (default 8).
+ * @param maxDepth Maximum recursion depth (default 8).
+ * @param russianRouletteLimit Recursion depth after which Russian roulette is applied (default 3).
+ * @return Color Computed radiance along the ray.
+ */
 auto PathTracer = [](const Ray& ray, const World& world, PCG& pcg, int nRays = 8,
                      int maxDepth = 8, int russianRouletteLimit = 3) -> Color {
 
@@ -61,6 +86,14 @@ auto PathTracer = [](const Ray& ray, const World& world, PCG& pcg, int nRays = 8
     return actualFunction(actualFunction, ray, world, pcg, nRays, maxDepth, russianRouletteLimit);
 };
 
+/**
+ * @brief Simple point light renderer combining ambient lighting and direct illumination from point lights.
+ * 
+ * @param ray Ray to trace.
+ * @param world Scene containing objects and lights.
+ * @param ambientColor Ambient light color added to the final result (default: low gray).
+ * @return Color Computed color including ambient and direct lighting.
+ */
 auto PointLight = [](const Ray& ray, const World& world,
                      const Color& ambientColor = Color(0.1, 0.1, 0.1)) {
     HitRecord hit;
