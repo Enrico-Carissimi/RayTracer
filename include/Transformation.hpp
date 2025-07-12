@@ -10,21 +10,31 @@
  */
 enum class Axis {X, Y, Z};
 
-const float IDENTITY4[16] = {1., 0., 0., 0.,
-                             0., 1., 0., 0.,
-                             0., 0., 1., 0.,
-                             0., 0., 0., 1.};
+inline constexpr float IDENTITY4[16] = {1., 0., 0., 0.,
+                                        0., 1., 0., 0.,
+                                        0., 0., 1., 0.,
+                                        0., 0., 0., 1.};
 
+// This explicit matrix multiplication is around 4.5 times faster than using for loops.
+// There is no gain in speed in the rendering since matrix multiplication is only used
+// in Transformation initialization. Still, there's no reason not to use this.
 inline void matrixMult(const float A[16], const float B[16], float result[16]) {
-    for (int j = 0; j < 4; j++) {
-        for (int i = 0; i < 4; i++) {
-            float sum = 0.;
-            for (int k = 0; k < 4; k++) {
-                sum += A[k + 4 * j] * B[i + 4 * k]; // nesting 3 times is kinda ugly
-            }
-            result[i + 4 * j] = sum; // since we use operator +=, we would need to make sure each element of result is 0
-        }
-    }
+    result[0] = A[0] * B[0] + A[1] * B[4] + A[2] * B[8] + A[3] * B[12];
+    result[1] = A[0] * B[1] + A[1] * B[5] + A[2] * B[9] + A[3] * B[13];
+    result[2] = A[0] * B[2] + A[1] * B[6] + A[2] * B[10] + A[3] * B[14];
+    result[3] = A[0] * B[3] + A[1] * B[7] + A[2] * B[11] + A[3] * B[15];
+    result[4] = A[4] * B[0] + A[5] * B[4] + A[6] * B[8] + A[7] * B[12];
+    result[5] = A[4] * B[1] + A[5] * B[5] + A[6] * B[9] + A[7] * B[13];
+    result[6] = A[4] * B[2] + A[5] * B[6] + A[6] * B[10] + A[7] * B[14];
+    result[7] = A[4] * B[3] + A[5] * B[7] + A[6] * B[11] + A[7] * B[15];
+    result[8] = A[8] * B[0] + A[9] * B[4] + A[10] * B[8] + A[11] * B[12];
+    result[9] = A[8] * B[1] + A[9] * B[5] + A[10] * B[9] + A[11] * B[13];
+    result[10] = A[8] * B[2] + A[9] * B[6] + A[10] * B[10] + A[11] * B[14];
+    result[11] = A[8] * B[3] + A[9] * B[7] + A[10] * B[11] + A[11] * B[15];
+    result[12] = A[12] * B[0] + A[13] * B[4] + A[14] * B[8] + A[15] * B[12];
+    result[13] = A[12] * B[1] + A[13] * B[5] + A[14] * B[9] + A[15] * B[13];
+    result[14] = A[12] * B[2] + A[13] * B[6] + A[14] * B[10] + A[15] * B[14];
+    result[15] = A[12] * B[3] + A[13] * B[7] + A[14] * B[11] + A[15] * B[15];
 }
 
 /**
