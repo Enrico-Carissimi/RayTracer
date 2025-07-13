@@ -153,7 +153,10 @@ const std::unordered_map<Keywords, std::string, _EnumClassHash> INVERSE_KEYWORDS
 
 
 
-// data needed to construct the token type, 
+// data needed to construct the token type, since c++ doesn't have tagged unions
+// (std::variant cannot differenciate between string literals and idetifiers
+// since they're both strings)
+
 enum class TokenTags {
     KEYWORD, IDENTIFIER, STRING_LITERAL, NUMBER_LITERAL, SYMBOL, STOP
 };

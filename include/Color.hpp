@@ -50,7 +50,7 @@ public:
 
     /**
      * @brief Computes the luminosity of the color as the average of the max and min components.
-     * @return Luminosity value (float).
+     * @return float
      */
     float luminosity() const {
         float maxVal = std::max({r, g, b});
