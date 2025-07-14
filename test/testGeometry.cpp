@@ -1,8 +1,10 @@
 #include <iostream>
-#include "Vec3.hpp" 
-#include "Point3.hpp"  
-#include "Normal3.hpp" 
-#include "Transformation.hpp" 
+#include "Vec3.hpp"
+#include "Point3.hpp"
+#include "Normal3.hpp"
+#include "Transformation.hpp"
+#include "utils.hpp"
+
 
 
 void testVec3operations() {
@@ -17,14 +19,17 @@ void testVec3operations() {
     sassert((a + b).isClose(Vec3(5.0, 8.0, 11.0)));
     sassert((b - a).isClose(Vec3(3.0, 4.0, 5.0)));
     sassert((a * 2).isClose(Vec3(2.0, 4.0, 6.0)));
-    sassert(fabs(dot(a, b) - 40.0f) < 1e-5);
+    sassert((2 * a).isClose(Vec3(2.0, 4.0, 6.0)));
+    sassert(areClose(dot(a, b), 40.0f));
     sassert(cross(a, b).isClose(Vec3(-2.0, 4.0, -2.0))); 
     sassert(cross(b, a).isClose(Vec3(2.0, -4.0, 2.0))); 
-    sassert(fabs(a.norm2() - 14.0f) < 1e-5);
-    sassert(fabs(a.norm() * a.norm() - 14.0f) < 1e-5);
+    sassert(areClose(a.norm2(), 14.0f));
+    sassert(areClose(a.norm() * a.norm(), 14.0f));
+
+    a += b;
+    sassert(a.isClose(Vec3(5.0, 8.0, 11.0)));
 
 }
-
 
 void testPoint3operations() {
 
@@ -41,7 +46,6 @@ void testPoint3operations() {
     sassert((p1 - v).isClose(Point3(-3.0, -4.0, -5.0)));  
 
 }
-
 
 void testTrasformation() {
 
@@ -75,7 +79,6 @@ void testTrasformation() {
     sassert(!m1.isClose(m4));
 
 }
-
 
 void testTransformationMultiplication() {
     float m1_matrix[16] = {
@@ -132,7 +135,6 @@ void testTransformationMultiplication() {
     sassert(areCloseMatrix(expected.matrix, (m1 * m2).matrix));
     sassert(areCloseMatrix(expected.inverseMatrix, (m1 * m2).inverseMatrix));
 }
-
 
 void testVecPointMultiplication() {
 
