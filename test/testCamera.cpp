@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../Camera.hpp"
+#include "Camera.hpp"
 
 // we test the functions _castOrthogonal and _castPerspective
 // instead of Camera::castRay since the latter uses integer image coordinates

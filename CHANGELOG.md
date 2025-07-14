@@ -1,5 +1,7 @@
 # HEAD
 
+# Version 1.0.0
+
 - Add `render` command and remove `demo` [#10](https://github.com/Enrico-Carissimi/RayTracer/pull/10)
 - Add reading a scene from file using a custom language [#10](https://github.com/Enrico-Carissimi/RayTracer/pull/10)
 

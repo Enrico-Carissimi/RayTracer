@@ -1,5 +1,5 @@
-#include "../HDRImage.hpp"
-#include "../utils.hpp"
+#include "HDRImage.hpp"
+#include "utils.hpp"
 
 using std::cout, std::endl;
 
@@ -139,33 +139,6 @@ int main(){
     image.save("../test/test.jpeg");
     testException("../test/test.gif", [&image](std::string s) -> auto {return image.save(s);});
     cout << "there should be \"test.*\" files containing 6 pixels: g, w, r / y, m, k" << endl;
-
-
-
-    /* // test readPFM
-    unsigned char small[] = {0x50, 0x46, 0x0a, 0x31, 0x20, 0x31, 0x0a, 0x2d, 0x31, 0x2e, 0x30, 0x0a,
-                             0x00, 0x00, 0xc8, 0x42, 0x00, 0x00, 0x48, 0x43, 0x00, 0x00, 0x96, 0x43};
-    std::stringstream ss2;
-    for (int i = 0; i < 24; i++) ss2 << small[i]; // make stream from array of bytes
-    std::istringstream stream2(ss2.str());
-    //cout << ss2.str() << endl;
-    std::string s;
-    stream2 >> s; // PF
-    cout << s << endl;
-    stream2 >> s; // width
-    cout << s << endl;
-    stream2 >> s; // height
-    cout << s << endl;
-    stream2 >> s; // endianness
-    cout << s << endl;
-    
-    cout << readFloat(stream2, Endianness::LITTLE) << endl;
-    cout << readFloat(stream2, Endianness::LITTLE) << endl;
-    cout << readFloat(stream2, Endianness::LITTLE) << endl; */
-    
-    /* HDRImage image(stream2);
-    cout << image._width << image._height << endl;
-    cout << image.getPixel(0, 0).r << image.getPixel(0, 0).g << image.getPixel(0, 0).b << endl; */
 
     return 0;
 }

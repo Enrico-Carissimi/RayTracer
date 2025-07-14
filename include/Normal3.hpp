@@ -6,6 +6,10 @@
 #include <string>
 #include "Vec3.hpp"
 
+/**
+ * @struct Normal3
+ * @brief Represents a 3D normal vector with basic operations.
+ */
 struct Normal3 {
     float x, y, z;
 
@@ -63,6 +67,6 @@ inline Normal3 cross(const Normal3& n, const Normal3& m) {
     );
 }
 
-std::ostream& operator<<(std::ostream& stream, const Normal3& n) { return stream << n.toString(); }
+inline std::ostream& operator<<(std::ostream& stream, const Normal3& n) { return stream << n.toString(); }
 
 #endif

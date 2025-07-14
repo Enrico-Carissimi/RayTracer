@@ -5,29 +5,43 @@
 #include "Point3.hpp"
 #include "Normal3.hpp"
 
-
-
+/**
+ * @brief Enum to represent coordinate axes for rotations and scaling.
+ */
 enum class Axis {X, Y, Z};
 
-const float IDENTITY4[16] = {1., 0., 0., 0.,
-                             0., 1., 0., 0.,
-                             0., 0., 1., 0.,
-                             0., 0., 0., 1.};
+inline constexpr float IDENTITY4[16] = {1., 0., 0., 0.,
+                                        0., 1., 0., 0.,
+                                        0., 0., 1., 0.,
+                                        0., 0., 0., 1.};
 
+// This explicit matrix multiplication is around 4.5 times faster than using for loops.
+// There is no gain in speed in the rendering since matrix multiplication is only used
+// in Transformation initialization. Still, there's no reason not to use this.
 inline void matrixMult(const float A[16], const float B[16], float result[16]) {
-    for (int j = 0; j < 4; j++) {
-        for (int i = 0; i < 4; i++) {
-            float sum = 0.;
-            for (int k = 0; k < 4; k++) {
-                sum += A[k + 4 * j] * B[i + 4 * k]; // nesting 3 times is kinda ugly
-            }
-            result[i + 4 * j] = sum; // since we use operator +=, we would need to make sure each element of result is 0
-        }
-    }
+    result[0] = A[0] * B[0] + A[1] * B[4] + A[2] * B[8] + A[3] * B[12];
+    result[1] = A[0] * B[1] + A[1] * B[5] + A[2] * B[9] + A[3] * B[13];
+    result[2] = A[0] * B[2] + A[1] * B[6] + A[2] * B[10] + A[3] * B[14];
+    result[3] = A[0] * B[3] + A[1] * B[7] + A[2] * B[11] + A[3] * B[15];
+    result[4] = A[4] * B[0] + A[5] * B[4] + A[6] * B[8] + A[7] * B[12];
+    result[5] = A[4] * B[1] + A[5] * B[5] + A[6] * B[9] + A[7] * B[13];
+    result[6] = A[4] * B[2] + A[5] * B[6] + A[6] * B[10] + A[7] * B[14];
+    result[7] = A[4] * B[3] + A[5] * B[7] + A[6] * B[11] + A[7] * B[15];
+    result[8] = A[8] * B[0] + A[9] * B[4] + A[10] * B[8] + A[11] * B[12];
+    result[9] = A[8] * B[1] + A[9] * B[5] + A[10] * B[9] + A[11] * B[13];
+    result[10] = A[8] * B[2] + A[9] * B[6] + A[10] * B[10] + A[11] * B[14];
+    result[11] = A[8] * B[3] + A[9] * B[7] + A[10] * B[11] + A[11] * B[15];
+    result[12] = A[12] * B[0] + A[13] * B[4] + A[14] * B[8] + A[15] * B[12];
+    result[13] = A[12] * B[1] + A[13] * B[5] + A[14] * B[9] + A[15] * B[13];
+    result[14] = A[12] * B[2] + A[13] * B[6] + A[14] * B[10] + A[15] * B[14];
+    result[15] = A[12] * B[3] + A[13] * B[7] + A[14] * B[11] + A[15] * B[15];
 }
 
-
-
+/**
+ * @brief Class representing a 3D affine transformation with forward and inverse matrices.
+ * 
+ * Supports application to vectors, points, normals, and composition of transformations.
+ */
 class Transformation {
 public:
     float matrix[16] = {0.}, inverseMatrix[16] = {0.};
@@ -90,37 +104,42 @@ public:
     
 };
 
-
-
-Transformation scaling(float x, float y, float z) {
+// scaling
+inline Transformation scaling(float x, float y, float z) {
     float mat[16] = {0.}, inv[16] = {0.};
     mat[0] = x, mat[5] = y, mat[10] = z, mat[15] = 1.;
     inv[0] = 1. / x, inv[5] = 1. / y, inv[10] = 1. / z, inv[15] = 1.;
     return Transformation(mat, inv);
 }
-Transformation scaling(const Vec3& vec) {
+
+inline Transformation scaling(const Vec3& vec) {
     return scaling(vec.x, vec.y, vec.z);
 }
-Transformation scaling(float s, Axis axis) {
+
+inline Transformation scaling(float s, Axis axis) {
     if (axis == Axis::X) return scaling(s, 1., 1.);
     if (axis == Axis::Y) return scaling(1., s, 1.);
     return scaling(1., 1., s); // Z
 }
-Transformation scaling(float s) {
+
+inline Transformation scaling(float s) {
     return scaling(s, s, s);
 }
 
-Transformation translation(float x, float y, float z) {
+// translations
+inline Transformation translation(float x, float y, float z) {
     Transformation trasl(IDENTITY4, IDENTITY4);
     trasl.matrix[3] = x, trasl.matrix[7] = y, trasl.matrix[11] = z;
     trasl.inverseMatrix[3] = -x, trasl.inverseMatrix[7] = -y, trasl.inverseMatrix[11] = -z;
     return trasl;
 }
-Transformation translation(const Vec3& vec) {
+
+inline Transformation translation(const Vec3& vec) {
     return translation(vec.x, vec.y, vec.z);
 }
 
-Transformation rotation(float angle, Axis axis) {
+// rotation
+inline Transformation rotation(float angle, Axis axis) {
     float mat[16] = {0.}, inv[16] = {0.};
     mat[15] = 1., inv[15] = 1.; // element [3][3] is always 1
 

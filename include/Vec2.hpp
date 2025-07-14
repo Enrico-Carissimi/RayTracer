@@ -4,8 +4,11 @@
 #include <cmath>
 #include <sstream>
 #include <iostream>
-#include "utils.hpp"  // Per areClose()
+#include "utils.hpp"
 
+/**
+ * @brief Represents a 2D vector with coordinates (u, v).
+ */
 struct Vec2 {
     float u, v;
 

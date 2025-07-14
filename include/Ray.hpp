@@ -6,6 +6,9 @@
 #include "Vec3.hpp"
 #include "Transformation.hpp"
 
+/**
+ * @brief Represents a ray in 3D space with origin, direction, and valid parameter range.
+ */
 class Ray {
 
 public: 

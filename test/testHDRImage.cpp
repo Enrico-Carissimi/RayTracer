@@ -1,6 +1,6 @@
 #include <iostream>
-#include "../HDRImage.hpp"
-#include "../utils.hpp"
+#include "HDRImage.hpp"
+#include "utils.hpp"
 
 using std::cout, std::endl;
 
