@@ -50,7 +50,7 @@ RayTracer render examples/demo.txt -A 1 -n 1
 If you want a higher quality demo, with `-A 4 -n 3` it's not that slow and a lot better.
 
 ### Scene files
-The scene to render must be defined in a text file, see "examples/README.md" for more information.
+The scene to render must be defined in a text file, see [examples/README.md](https://github.com/Enrico-Carissimi/RayTracer/blob/main/examples/README.md) for more information.
 
 ## History
 See [CHANGELOG.md](https://github.com/Enrico-Carissimi/RayTracer/blob/main/CHANGELOG.md).
