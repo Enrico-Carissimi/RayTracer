@@ -244,14 +244,23 @@ void Scene::parseMaterial(InputStream& inputFile) {
     std::shared_ptr<Texture> texture = parseTexture(inputFile);
     expectSymbol(inputFile, ',');
     std::shared_ptr<Texture> emittedRadiance = parseTexture(inputFile);
-    expectSymbol(inputFile, ')');
 
-    expectSymbol(inputFile, ')');
+    float blur = 0.0f;
+    if (kw == Keywords::SPECULAR) { // the blur is not mandatory
+        Token t = inputFile.readToken();
+        if (t.tag == TokenTags::SYMBOL && t.value.symbol == ',')
+            blur = expectNumber(inputFile);
+        else inputFile.unreadToken(t);
+    }
+
+    expectSymbol(inputFile, ')'); // close the definition
+
+    expectSymbol(inputFile, ')'); // close the identifier
 
     if (kw == Keywords::DIFFUSE)
         materials[name] = std::make_shared<DiffuseMaterial>(texture, emittedRadiance);
     else
-        materials[name] = std::make_shared<SpecularMaterial>(texture, emittedRadiance);
+        materials[name] = std::make_shared<SpecularMaterial>(texture, emittedRadiance, blur);
 }
 
 Transformation Scene::parseTransformation(InputStream& inputFile) {
