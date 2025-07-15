@@ -171,7 +171,7 @@ void testParser() {
 
         "material sphere_material(\n"
         "    specular(uniform(<0.5, 0.5, 0.5>),\n"
-        "    uniform(<0, 0, 0>))\n"
+        "    uniform(<0, 0, 0>), 0.0)\n"
         ")\n\n"
 
         "plane (sky_material, translation([0, 0, 100]) * rotationY(clock))\n"
@@ -247,8 +247,8 @@ void testUndefinedMaterial() {
 void testDoubleCamera() {
     std::istringstream ss;
     ss.str(
-        "camera(perspective, rotationZ(30) * translation([-4, 0, 1]), 1.0, 1.0)\n"
-        "camera(orthogonal, identity, 1.0, 1.0)"
+        "camera(perspective, 1, 100, 1, rotationZ(30) * translation([-4, 0, 1]))\n"
+        "camera(orthogonal, 1, 100, 1, identity)"
     );
     InputStream stream(ss, 0);
 
