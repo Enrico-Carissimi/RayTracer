@@ -1,0 +1,23 @@
+# demo for blurry reflections
+# use a low number of rays -n and a high ray depth -d
+
+camera(perspective, 1.33333, 560, 1., translation([-3., 0., 0.]))
+
+material perfect(specular(uniform(<0.8, 0.8, 0.8>), uniform(<0., 0., 0.>)))
+material blurry(specular(uniform(<0.9, 0.9, 0.9>), uniform(<0., 0., 0.>), 0.05))
+material extrablurry(specular(uniform(<1., 1., 1.>), uniform(<0., 0., 0.>), 0.5))
+
+material red(diffuse(uniform(<1., 0., 0.>), uniform(<0., 0., 0.>)))
+material back(diffuse(uniform(<0.5, 0.5, 0.5>), uniform(<0., 0., 0.>)))
+material checks(diffuse(checkered(<1., 1., 0.>, <0., 0., 1.>, 10), uniform(<0., 0., 0.>)))
+
+material ceiling(diffuse(uniform(<0., 0., 0.>), uniform(<1., 1., 1.>)))
+
+plane(perfect, rotationZ(-10) * translation([0, 1.5, 0]) * rotationX(90))
+plane(blurry, rotationZ(10) * translation([0, -1.5, 0]) * rotationX(-90))
+plane(extrablurry, translation([0, 0, -1.5]))
+plane(ceiling, translation([0, 0, 1.5]))
+plane(back, translation([1.5, 0, 0]) * rotationY(90))
+
+sphere(checks, identity)
+sphere(red, translation([-0.8, -0.8, -0.8]) * scaling([0.5, 0.5, 0.5]))
