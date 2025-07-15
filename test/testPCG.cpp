@@ -1,5 +1,6 @@
 #include <iostream>
 #include "utils.hpp"
+#include "Vec3.hpp"
 
 int main() {
     PCG pcg;
@@ -19,6 +20,10 @@ int main() {
         uint32_t result = pcg.randomUint32();
         std::cout << "Result " << i << ": " << result << "\n";
         sassert(result == expected[i]);
+    }
+
+    for (int i = 0; i < 10; ++i) {
+        sassert(areClose(randomVersor(pcg).norm2(), 1.0f));
     }
 
     std::cout << "All tests passed.\n";
