@@ -136,6 +136,10 @@ public:
     float random() {
         return randomUint32() / static_cast<float>(0xffffffffU);
     }
+
+    float random(float min, float max) {
+        return min + random() * (max - min);
+    }
 };
 
 
