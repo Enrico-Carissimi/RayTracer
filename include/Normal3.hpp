@@ -40,6 +40,8 @@ struct Normal3 {
         return (n > 0) ? Normal3(x / n, y / n, z / n) : Normal3();
     }
 
+    Vec3 toVec() const { return Vec3(x, y, z); }
+
     // Comparison for tests
     bool isClose(Normal3 other, float epsilon = 1e-5f) {
         return areClose(*this, other, epsilon);
