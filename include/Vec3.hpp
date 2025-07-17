@@ -70,17 +70,4 @@ inline Vec3 cross(const Vec3& v, const Vec3& u) {
 
 inline std::ostream& operator<<(std::ostream& stream, const Vec3& v) { return stream << v.toString(); }
 
-
-
-// uses a simple rejection method, maybe faster than other methods in 3D (not tested)
-inline Vec3 randomVersor(PCG& pcg) {
-    while(true){
-        float x = pcg.random(-1.0f, 1.0f), y = pcg.random(-1.0f, 1.0f), z = pcg.random(-1.0f, 1.0f);
-        float norm2 = x * x + y * y + z * z;
-        if (norm2 < 1.0f && norm2 != 0.0f) {
-            return Vec3(x, y, z) / std::sqrt(norm2);
-        }
-    }
-}
-
 #endif
