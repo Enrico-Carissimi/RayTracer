@@ -10,7 +10,7 @@ target_compile_features(compilerFlags INTERFACE cxx_std_20)
 
 
 # library containing all cpp files (other than the main)
-add_library(raylib src/scenefile.cpp src/PFMReader.cpp src/HDRImage.cpp)
+add_library(raylib src/scenefile.cpp src/PFMReader.cpp src/HDRImage.cpp src/utils.cpp)
 target_include_directories(raylib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/external)
 target_link_libraries(raylib PUBLIC compilerFlags)
 
