@@ -23,7 +23,13 @@ int main() {
     }
 
     for (int i = 0; i < 10; ++i) {
-        sassert(areClose(randomVersor(pcg).norm2(), 1.0f));
+        float x = pcg.random(-3.5f, 6.1f);
+        sassert(x > -3.5f && x < 6.1f);
+
+        Vec3 v = pcg.randomVersor();
+        sassert(areClose(v.norm2(), 1.0f));
+        sassert(areClose(pcg.sampleHemisphere(v).norm2(), 1.0f));
+        sassert(dot(pcg.sampleHemisphere(v), v) >= 0.0f); // check if the direction is correct
     }
 
     std::cout << "All tests passed.\n";
