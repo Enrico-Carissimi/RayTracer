@@ -38,6 +38,10 @@ inline bool areClose(const T1& v, const T1& u, float epsilon = 1e-5f) {
     return (areClose(v.x, u.x, epsilon) && areClose(v.y, u.y, epsilon) && areClose(v.z, u.z, epsilon));
 }
 
+// geometric transformations on vectors, v and n must be normalized
+Vec3 reflect(const Vec3& v, const Normal3& n);
+Vec3 refract(const Vec3& v, const Normal3& n, float refractionIndexRatio);
+
 // utility for the lexer
 inline bool isCharSkippable(const char& c) {
     return (c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '#');

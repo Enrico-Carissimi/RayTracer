@@ -264,6 +264,35 @@ void testONB() {
     }
 }
 
+void testReflection() {
+    Normal3 n(2. / 3., 2. / 3., 1. / 3.);
+    sassert(areClose(n.norm2(), 1.));
+
+    Vec3 k(0., 0., 1.);
+    sassert(reflect(k, n).isClose(Vec3(-4. / 9., -4. / 9., 7. / 9.)));
+
+    PCG pcg;
+    for (int i = 0; i < 10; i++) {
+        sassert(areClose(reflect(pcg.randomVersor(), n).norm2(), 1.));
+    }
+}
+
+void testRefraction() {
+    Normal3 n(0., 0., 1.);
+    Vec3 v = Vec3(1., 1., -1).normalize();
+
+    sassert(refract(v, n, 1.).isClose(v)); // n1/n2 = 1
+    sassert(refract(v, n, 100.).isClose(reflect(v, n))); // no refraction
+
+    v = Vec3(1., 0., -1.).normalize();
+    sassert(refract(v, n, 1. / std::sqrt(2.)).isClose(Vec3(0.5, 0., -0.5 * std::sqrt(3.)))); // from 45 to 30 deg
+
+    PCG pcg;
+    for (int i = 0; i < 10; i++) {
+        sassert(areClose(refract(pcg.randomVersor(), n, 0.8).norm2(), 1.));
+    }
+}
+
 
 
 int main() {
@@ -279,6 +308,9 @@ int main() {
     testScaling();
 
     testONB();
+
+    testReflection();
+    testRefraction();
     
     std::cout << "All tests passed!\n";
     return 0;

@@ -51,6 +51,26 @@ Vec3 PCG::sampleHemisphere(Normal3 n) {
 
 // other stuff
 
+Vec3 reflect(const Vec3& v, const Normal3& n) {
+    Vec3 nVec = n.toVec();
+    return v - nVec * 2.0f * dot(nVec, v);
+}
+
+Vec3 refract(const Vec3& v, const Normal3& n, float refractionIndexRatio) {
+    Vec3 nVec = -n.toVec(); // - because v enters the surface while n exits
+
+    float cos = dot(nVec, v);
+    float sin2 = 1 - cos * cos;
+
+    // reflection if n1/n2 * sin(theta1) = sin(theta2) > 1
+    if (refractionIndexRatio * refractionIndexRatio * sin2 > 1.0f) return reflect(v, n);
+
+    // refraction, from https://physics.stackexchange.com/questions/435512/snells-law-in-vector-form
+    return nVec * std::sqrt(1.0f - refractionIndexRatio * refractionIndexRatio * sin2) + (v - cos * nVec) * refractionIndexRatio;
+}
+
+
+
 void validateFloatVariable(std::string& s, std::unordered_map<std::string, float>& floatVariables) {
     std::string key;
     float value;
