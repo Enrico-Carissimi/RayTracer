@@ -120,15 +120,7 @@ public:
     }
 
     Ray scatterRay(PCG& pcg, const Vec3& incomingDir, const Point3& interactionPoint, const Normal3& normal, int depth) const override {
-        // cosine-weighted distribution around the z (local) axis
-        Vec3 n(normal.x, normal.y, normal.z);
-        Vec3 e1, e2;
-        createONB(n, e1, e2);
-        float cos2 = pcg.random();
-        float cosTheta = std::sqrt(cos2), sinTheta = std::sqrt(1.0f - cos2);
-        float phi = 2.0f * PI * pcg.random();
-
-        return Ray(interactionPoint, e1 * std::cos(phi) * cosTheta + e2 * std::sin(phi) * cosTheta + n * sinTheta, 1e-5f, INF, depth);
+        return Ray(interactionPoint, pcg.sampleHemisphere(normal), 1e-5f, INF, depth);
     }
 
 private:
@@ -156,18 +148,14 @@ public:
 
     Ray scatterRay(PCG& pcg, const Vec3& incomingDir, const Point3& interactionPoint,
                    const Normal3& normal, int depth) const override {
-        Vec3 rayDir = incomingDir.normalize();
-        Vec3 norm(normal.x, normal.y, normal.z);
+        Vec3 reflectedDir = reflect(incomingDir.normalize(), normal);
 
-        // normalize "norm" here to avoid a call to std::sqrt
-        Vec3 reflectedDir = rayDir - norm * 2.0f * dot(norm, rayDir) / norm.norm2();
-
-        // Moves the reflected direction by a random vector of length _blur.
-        // I don't think this is physical, but is probably better than sampling
-        // the cone uniformly.
-        // _blur should also be less then 1, otherwise the ray might go inside the shape.
-        if (_blur > 0.0f && _blur < 1.0f) {
-            reflectedDir += _blur * randomVersor(pcg);
+        // Moves the reflected direction by a random vector of length _blur
+        // in the same direction of the reflection. I don't think this is physical,
+        // but is probably better than sampling the cone uniformly.
+        // !!! The ray could go back inside the object...
+        if (_blur > 0.0f) {
+            reflectedDir += _blur * pcg.sampleHemisphere(reflectedDir);
         }
 
         return Ray{interactionPoint, reflectedDir, 1e-5f, INF, depth};
@@ -175,6 +163,28 @@ public:
 
 private:
     float _blur, _thresholdAngleRad;
+};
+
+/**
+ * @class TransparentMaterial
+ * @brief Transparent material that refracts light.
+ */
+class TransparentMaterial : public Material {
+public:
+    TransparentMaterial() : Material(), _refractionIndex(1.0f) {}
+    TransparentMaterial(std::shared_ptr<Texture> texture, std::shared_ptr<Texture> emittedRadiance = std::make_shared<UniformTexture>(Color()), float refractionIndex = 1.0f)
+        : Material(texture, emittedRadiance), _refractionIndex(refractionIndex), _inverseRefractionIndex(1.0f / refractionIndex) {}
+
+    Color eval(const Vec2& uv, float thetaIn = 0.0f, float thetaOut = 0.0f) const override { // to be changed
+        return _texture->color(uv) * (1.0f / PI); // divide by pi to be consistent with the diffuse material (for now)
+    }
+
+    Ray scatterRay(PCG& pcg, const Vec3& incomingDir, const Point3& interactionPoint, const Normal3& normal, int depth) const override {
+        return Ray(interactionPoint, incomingDir, 1e-5f, INF, depth); // to be changed
+    }
+
+private:
+    float _refractionIndex, _inverseRefractionIndex;
 };
 
 #endif
