@@ -15,7 +15,7 @@ namespace Renderers {
  */
 auto OnOff = [](const Ray& ray, const World& world) {
     HitRecord rec;
-    return world.isHit(ray, rec) ? Color(1., 1., 1.) : Color(0., 0., 0.);
+    return world.isHit(ray, rec) ? Color(1.0f, 1.0f, 1.0f) : Color(0.0f, 0.0f, 0.0f);
 };
 
 /**
@@ -48,7 +48,7 @@ auto PathTracer = [](const Ray& ray, const World& world, PCG& pcg, int nRays = 8
     auto actualFunction = [](const auto& self, const Ray& ray, const World& world, PCG& pcg, int nRays, // ew
                              int maxDepth, int russianRouletteLimit) -> Color {
 
-        if (ray.depth > maxDepth) { return Color(0., 0., 0.); }
+        if (ray.depth > maxDepth) { return Color(0.0f, 0.0f, 0.0f); }
 
         HitRecord rec;
         if (!world.isHit(ray, rec)) { return world.backgroundColor; }
@@ -61,10 +61,10 @@ auto PathTracer = [](const Ray& ray, const World& world, PCG& pcg, int nRays = 8
 
         // russian roulette
         if (ray.depth >= russianRouletteLimit) {
-            float q = std::max(0.05, 1. - hitColorLuminosity);
+            float q = std::max(0.05f, 1.0f - hitColorLuminosity);
             if (pcg.random() > q) {
                 // keep the recursion going, but compensate for other potentially discarded rays
-                hitColor *= 1. / (1. - q);
+                hitColor *= 1.0f / (1.0f - q);
             } else {
                 // terminate prematurely
                 return emittedRadiance;
@@ -72,15 +72,15 @@ auto PathTracer = [](const Ray& ray, const World& world, PCG& pcg, int nRays = 8
         }
 
         Color totalRadiance;
-        if (hitColorLuminosity > 0.) {  // only do costly recursions if it's worth it
+        if (hitColorLuminosity > 0.0f) {  // only do costly recursions if it's worth it
             for (int i = 0; i < nRays; i++) {
-                Ray newRay = hitMaterial->scatterRay(pcg, rec.ray.direction, rec.worldPoint, rec.normal, ray.depth + 1);
+                Ray newRay = hitMaterial->scatterRay(pcg, rec, ray.depth + 1);
                 Color newRadiance = self(self, newRay, world, pcg, nRays, maxDepth, russianRouletteLimit); // recursive call
                 totalRadiance += hitColor * newRadiance;
             }
         }
         
-        return emittedRadiance + totalRadiance * (1. / nRays); // no operator / in Color
+        return emittedRadiance + totalRadiance * (1.0f / nRays); // no operator / in Color
     };
 
     return actualFunction(actualFunction, ray, world, pcg, nRays, maxDepth, russianRouletteLimit);
@@ -95,7 +95,7 @@ auto PathTracer = [](const Ray& ray, const World& world, PCG& pcg, int nRays = 8
  * @return Color Computed color including ambient and direct lighting.
  */
 auto PointLight = [](const Ray& ray, const World& world,
-                     const Color& ambientColor = Color(0.1, 0.1, 0.1)) {
+                     const Color& ambientColor = Color(0.1f, 0.1f, 0.1f)) {
     HitRecord hit;
     if (!world.isHit(ray, hit))
         return world.backgroundColor;
