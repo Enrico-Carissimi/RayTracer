@@ -7,6 +7,15 @@ project(RayTracer VERSION 1.0.0
 add_library(compilerFlags INTERFACE)
 target_compile_features(compilerFlags INTERFACE cxx_std_20)
 
+# add compiler flags 
+set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
+set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
+
+target_compile_options(compilerFlags INTERFACE
+  "$<$<CONFIG:Debug>:$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wformat=2;-Wunused>>>"
+  "$<$<CONFIG:Debug>:$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>>"
+)
+
 
 
 # library containing all cpp files (other than the main)
