@@ -30,6 +30,7 @@ struct HitRecord {
     float t;
     Ray ray;
     std::shared_ptr<Material> material;
+    bool isInside = false;
 
     HitRecord() = default;
 
