@@ -166,6 +166,10 @@ private:
 /**
  * @class TransparentMaterial
  * @brief Transparent material that refracts light.
+ * 
+ * Works properly only when completely immersed in a single material.
+ * For example, a glass ball cannot be half under water and half in air,
+ * because its refraction index is relative to the exterior material.
  */
 class TransparentMaterial : public Material {
 public:
