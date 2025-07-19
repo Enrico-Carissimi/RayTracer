@@ -19,7 +19,8 @@ This program reads the scene to render from a text file, with the syntax describ
     - From image: image([string] file name). The file must be a .pfm image, paths are relative to the executable.
 - Materials:
     - Diffuse: material identifier(diffuse([texture], [texture] emitted radiance));
-    - Reflective: material identifier(specular([texture], [texture] emitted radiance, [float] blur)), where "blur" is optional, 0 if omitted.
+    - Reflective: material identifier(specular([texture], [texture] emitted radiance, [float] blur)), where "blur" is optional, 0 if omitted;
+    - Transparent: material identifier(transparent([texture], [texture] emitted radiance, [float] refraction index)), where the refraction index must divided by the one of the outside material.
 - Shapes: type([material], [transformation]). Valid types are "sphere" and "plane". The material here is a material identifier, the material itself must be defined outside the shape definition.
 - Point lights (for the point light renderer): pointLight([vector] position, [color], [float] radius).
 - Comments start with '#'.

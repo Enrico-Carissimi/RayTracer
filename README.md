@@ -7,7 +7,7 @@ Requires c++20, a compiler that supports it, and CMake 3.31.6+.\
 Download the release for the latest version from [here](https://github.com/Enrico-Carissimi/RayTracer/releases).\
 To build the project, create a "build" directory inside "RayTracer" and from that simply call:
 ```
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build .
 ```
 To run unit tests, simply do:
@@ -16,13 +16,16 @@ ctest
 ```
 If you prefer to work in the source directory, the three commands above become:
 ```
-cmake -B build
+cmake -DCMAKE_BUILD_TYPE=Release . -B build
 cmake --build build
 ctest --test-dir build
 ```
 
+Use option `-G` in the first command to manually select the generator.
+
 ## Usage
 In the following, the name of the executable is "RayTracer".
+
 ### Convert
 To convert images, do:
 ```
