@@ -59,14 +59,15 @@ Vec3 reflect(const Vec3& v, const Normal3& n) {
 Vec3 refract(const Vec3& v, const Normal3& n, float refractionIndexRatio) {
     Vec3 nVec = -n.toVec(); // - because v enters the surface while n exits
 
-    float cos = dot(nVec, v);
-    float sin2 = 1 - cos * cos;
+    float cos = std::min(dot(nVec, v), 1.0f); // avoid funny approximations
+    float sin2 = 1.0f - cos * cos;
 
     // reflection if n1/n2 * sin(theta1) = sin(theta2) > 1
-    if (refractionIndexRatio * refractionIndexRatio * sin2 > 1.0f) return reflect(v, n);
+    float mu2sin2 = 1.0f - refractionIndexRatio * refractionIndexRatio * sin2; // we check this to avoid float approximations
+    if (mu2sin2 < 0.0f) return reflect(v, n);                                  // leading to sqrt of somethinig negative later
 
     // refraction, from https://physics.stackexchange.com/questions/435512/snells-law-in-vector-form
-    return nVec * std::sqrt(1.0f - refractionIndexRatio * refractionIndexRatio * sin2) + (v - cos * nVec) * refractionIndexRatio;
+    return nVec * std::sqrt(mu2sin2) + (v - cos * nVec) * refractionIndexRatio;
 }
 
 
