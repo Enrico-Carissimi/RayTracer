@@ -1,8 +1,10 @@
 #include <iostream>
-#include "Vec3.hpp" 
-#include "Point3.hpp"  
-#include "Normal3.hpp" 
-#include "Transformation.hpp" 
+#include "Vec3.hpp"
+#include "Point3.hpp"
+#include "Normal3.hpp"
+#include "Transformation.hpp"
+#include "utils.hpp"
+
 
 
 void testVec3operations() {
@@ -17,14 +19,17 @@ void testVec3operations() {
     sassert((a + b).isClose(Vec3(5.0, 8.0, 11.0)));
     sassert((b - a).isClose(Vec3(3.0, 4.0, 5.0)));
     sassert((a * 2).isClose(Vec3(2.0, 4.0, 6.0)));
-    sassert(fabs(dot(a, b) - 40.0f) < 1e-5);
+    sassert((2 * a).isClose(Vec3(2.0, 4.0, 6.0)));
+    sassert(areClose(dot(a, b), 40.0f));
     sassert(cross(a, b).isClose(Vec3(-2.0, 4.0, -2.0))); 
     sassert(cross(b, a).isClose(Vec3(2.0, -4.0, 2.0))); 
-    sassert(fabs(a.norm2() - 14.0f) < 1e-5);
-    sassert(fabs(a.norm() * a.norm() - 14.0f) < 1e-5);
+    sassert(areClose(a.norm2(), 14.0f));
+    sassert(areClose(a.norm() * a.norm(), 14.0f));
+
+    a += b;
+    sassert(a.isClose(Vec3(5.0, 8.0, 11.0)));
 
 }
-
 
 void testPoint3operations() {
 
@@ -41,7 +46,6 @@ void testPoint3operations() {
     sassert((p1 - v).isClose(Point3(-3.0, -4.0, -5.0)));  
 
 }
-
 
 void testTrasformation() {
 
@@ -75,7 +79,6 @@ void testTrasformation() {
     sassert(!m1.isClose(m4));
 
 }
-
 
 void testTransformationMultiplication() {
     float m1_matrix[16] = {
@@ -132,7 +135,6 @@ void testTransformationMultiplication() {
     sassert(areCloseMatrix(expected.matrix, (m1 * m2).matrix));
     sassert(areCloseMatrix(expected.inverseMatrix, (m1 * m2).inverseMatrix));
 }
-
 
 void testVecPointMultiplication() {
 
@@ -262,6 +264,35 @@ void testONB() {
     }
 }
 
+void testReflection() {
+    Normal3 n(2. / 3., 2. / 3., 1. / 3.);
+    sassert(areClose(n.norm2(), 1.));
+
+    Vec3 k(0., 0., 1.);
+    sassert(reflect(k, n).isClose(Vec3(-4. / 9., -4. / 9., 7. / 9.)));
+
+    PCG pcg;
+    for (int i = 0; i < 10; i++) {
+        sassert(areClose(reflect(pcg.randomVersor(), n).norm2(), 1.));
+    }
+}
+
+void testRefraction() {
+    Normal3 n(0., 0., 1.);
+    Vec3 v = Vec3(1., 1., -1).normalize();
+
+    sassert(refract(v, n, 1.).isClose(v)); // n1/n2 = 1
+    sassert(refract(v, n, 100.).isClose(reflect(v, n))); // no refraction
+
+    v = Vec3(1., 0., -1.).normalize();
+    sassert(refract(v, n, 1. / std::sqrt(2.)).isClose(Vec3(0.5, 0., -0.5 * std::sqrt(3.)))); // from 45 to 30 deg
+
+    PCG pcg;
+    for (int i = 0; i < 10; i++) {
+        sassert(areClose(refract(pcg.randomVersor(), n, 0.8).norm2(), 1.));
+    }
+}
+
 
 
 int main() {
@@ -277,6 +308,9 @@ int main() {
     testScaling();
 
     testONB();
+
+    testReflection();
+    testRefraction();
     
     std::cout << "All tests passed!\n";
     return 0;

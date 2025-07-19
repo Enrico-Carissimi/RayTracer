@@ -238,20 +238,34 @@ void Scene::parseMaterial(InputStream& inputFile) {
     std::string name = expectIdentifier(inputFile);
     expectSymbol(inputFile, '(');
 
-    Keywords kw = expectKeywords(inputFile, {Keywords::DIFFUSE, Keywords::SPECULAR});
+    Keywords kw = expectKeywords(inputFile, {Keywords::DIFFUSE, Keywords::SPECULAR, Keywords::TRANSPARENT});
     
     expectSymbol(inputFile, '(');
     std::shared_ptr<Texture> texture = parseTexture(inputFile);
     expectSymbol(inputFile, ',');
     std::shared_ptr<Texture> emittedRadiance = parseTexture(inputFile);
-    expectSymbol(inputFile, ')');
 
-    expectSymbol(inputFile, ')');
+    float blur = 0.0f, refractionIndex;
+    if (kw == Keywords::SPECULAR) { // the blur is not mandatory
+        Token t = inputFile.readToken();
+        if (t.tag == TokenTags::SYMBOL && t.value.symbol == ',')
+            blur = expectNumber(inputFile);
+        else inputFile.unreadToken(t);
+    } else if (kw == Keywords::TRANSPARENT) {
+        expectSymbol(inputFile, ',');
+        refractionIndex = expectNumber(inputFile);
+    }
+
+    expectSymbol(inputFile, ')'); // close the definition
+
+    expectSymbol(inputFile, ')'); // close the identifier
 
     if (kw == Keywords::DIFFUSE)
         materials[name] = std::make_shared<DiffuseMaterial>(texture, emittedRadiance);
-    else
-        materials[name] = std::make_shared<SpecularMaterial>(texture, emittedRadiance);
+    else if (kw == Keywords::SPECULAR)
+        materials[name] = std::make_shared<SpecularMaterial>(texture, emittedRadiance, blur);
+    else if (kw == Keywords::TRANSPARENT)
+        materials[name] = std::make_shared<TransparentMaterial>(texture, emittedRadiance, refractionIndex);
 }
 
 Transformation Scene::parseTransformation(InputStream& inputFile) {

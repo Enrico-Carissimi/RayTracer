@@ -91,7 +91,7 @@ enum class Keywords {
     SPHERE, PLANE, POINT_LIGHT, // shapes
     MATERIAL,
     UNIFORM, CHECKERED, IMAGE, // textures
-    DIFFUSE, SPECULAR // materials
+    DIFFUSE, SPECULAR, TRANSPARENT // materials
 };
 
 const std::unordered_map<std::string, Keywords> KEYWORDS {
@@ -114,7 +114,8 @@ const std::unordered_map<std::string, Keywords> KEYWORDS {
     {"checkered", Keywords::CHECKERED},
     {"image", Keywords::IMAGE},
     {"diffuse", Keywords::DIFFUSE},
-    {"specular", Keywords::SPECULAR}
+    {"specular", Keywords::SPECULAR},
+    {"transparent", Keywords::TRANSPARENT}
 };
 
 // From https://stackoverflow.com/questions/18837857/cant-use-enum-class-as-unordered-map-key.
@@ -148,7 +149,8 @@ const std::unordered_map<Keywords, std::string, _EnumClassHash> INVERSE_KEYWORDS
     {Keywords::CHECKERED, "checkered"},
     {Keywords::IMAGE, "image"},
     {Keywords::DIFFUSE, "diffuse"},
-    {Keywords::SPECULAR, "specular"}
+    {Keywords::SPECULAR, "specular"},
+    {Keywords::TRANSPARENT, "transparent"}
 };
 
 

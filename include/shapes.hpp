@@ -8,9 +8,10 @@
 #include "materials.hpp"
 
 // Helper to compute normal of a unit sphere
-inline Normal3 sphereNormal(const Point3& point, const Vec3& rayDir) {
+inline Normal3 sphereNormal(const Point3& point, const Vec3& rayDir, HitRecord& rec) {
     Normal3 n(point.x, point.y, point.z);
-    return (dot(point.toVec(), rayDir) < 0.0f) ? n : -n;
+    rec.isInside = (dot(point.toVec(), rayDir) > 0.0f);
+    return rec.isInside ? -n : n;
 }
 
 // Helper to compute texture coordinates on unit sphere
@@ -76,7 +77,7 @@ public:
         rec.t = t;
         rec.ray = r;
         rec.worldPoint = transformation * localHit;
-        rec.normal = transformation * sphereNormal(localHit, invRay.direction);
+        rec.normal = transformation * sphereNormal(localHit, invRay.direction, rec);
         rec.surfacePoint = sphereUV(localHit);
         rec.material = _material;
     
