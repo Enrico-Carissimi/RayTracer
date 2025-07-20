@@ -25,7 +25,7 @@ public:
  */
 class UniformTexture : public Texture {
 public:
-    UniformTexture() : _color(Color(0., 0., 0.)) {}
+    UniformTexture() : _color(Color()) {}
     UniformTexture(const Color& c) : _color(c) {}
 
     Color color(const Vec2& uv) const override {
@@ -42,7 +42,7 @@ private:
  */
 class CheckeredTexture : public Texture {
 public:
-    CheckeredTexture() : _color1(Color(0., 0., 0.)), _color2(Color(1., 1., 1.)), _nSteps(8) {}
+    CheckeredTexture() : _color1(Color(0.0f, 0.0f, 0.0f)), _color2(Color(1.0f, 1.0f, 1.0f)), _nSteps(8) {}
     CheckeredTexture(const Color& c1, const Color& c2, int nSteps = 8) : _color1(c1), _color2(c2), _nSteps(nSteps) {}
 
     Color color(const Vec2& uv) const override {
@@ -62,7 +62,7 @@ private:
  */
 class ImageTexture : public Texture {
 public:
-    ImageTexture(const std::string& name) : _PFM(name) {_PFM.normalize(1.); _PFM.clamp();}
+    ImageTexture(const std::string& name) : _PFM(name) {_PFM.normalize(1.0f); _PFM.clamp();}
     ImageTexture(const HDRImage& image) : _PFM(image) {}
 
     Color color(const Vec2& uv) const override {
@@ -88,7 +88,7 @@ private:
  */
 class Material {
 public:
-    Material() : _texture(std::make_shared<UniformTexture>(Color(0., 0., 0.))), _emittedRadiance(std::make_shared<UniformTexture>(Color(0., 0., 0.))) {};
+    Material() : _texture(std::make_shared<UniformTexture>(Color())), _emittedRadiance(std::make_shared<UniformTexture>(Color())) {};
     Material(std::shared_ptr<Texture> texture, std::shared_ptr<Texture> emittedRadiance = std::make_shared<UniformTexture>(Color()))
         : _texture(texture), _emittedRadiance(emittedRadiance) {}
     virtual ~Material() = default;
@@ -97,8 +97,7 @@ public:
     Color emittedColor(const Vec2& uv) { return _emittedRadiance->color(uv); }
     
     virtual Color eval(const Vec2& uv, float thetaIn, float thetaOut) const = 0;
-    virtual Ray scatterRay(PCG& pcg, const Vec3& incomingDir, const Point3& interactionPoint,
-                           const Normal3& normal, int depth) const = 0;
+    virtual Ray scatterRay(PCG& pcg, const HitRecord& rec, int depth) const = 0;
 
 protected:
     std::shared_ptr<Texture> _texture;
@@ -111,62 +110,87 @@ protected:
  */
 class DiffuseMaterial : public Material {
 public:
-    DiffuseMaterial() : Material(), _reflectance(1.) {}
-    DiffuseMaterial(std::shared_ptr<Texture> texture, std::shared_ptr<Texture> emittedRadiance = std::make_shared<UniformTexture>(Color()), float reflectance = 1.)
-        : Material(texture, emittedRadiance), _reflectance(reflectance / PI) {}
+    DiffuseMaterial() : Material() {}
+    DiffuseMaterial(std::shared_ptr<Texture> texture, std::shared_ptr<Texture> emittedRadiance = std::make_shared<UniformTexture>(Color()))
+        : Material(texture, emittedRadiance) {}
 
-    Color eval(const Vec2& uv, float thetaIn = 0., float thetaOut = 0.) const override {
-        return _texture->color(uv) * _reflectance;
+    Color eval(const Vec2& uv, float thetaIn = 0.0f, float thetaOut = 0.0f) const override {
+        return _texture->color(uv) * INV_PI;
     }
 
-    Ray scatterRay(PCG& pcg, const Vec3& incomingDir, const Point3& interactionPoint, const Normal3& normal, int depth) const override {
-        // cosine-weighted distribution around the z (local) axis
-        Vec3 n(normal.x, normal.y, normal.z);
-        Vec3 e1, e2;
-        createONB(n, e1, e2);
-        float cos2 = pcg.random();
-        float cosTheta = std::sqrt(cos2), sinTheta = std::sqrt(1. - cos2);
-        float phi = 2. * PI * pcg.random();
-
-        return Ray(interactionPoint, e1 * std::cos(phi) * cosTheta + e2 * std::sin(phi) * cosTheta + n * sinTheta, 1e-5, INF, depth);
+    Ray scatterRay(PCG& pcg, const HitRecord& rec, int depth) const override {
+        return Ray(rec.worldPoint, pcg.sampleHemisphere(rec.normal), RAY_MIN, INF, depth);
     }
-
-private:
-    float _reflectance; // is already divided by pi in the constructor
 };
 
 /**
  * @class SpecularMaterial
- * @brief Perfect mirror-like reflective material.
+ * @brief Mirror-like reflective material, with adjustable "blurriness".
  */
 class SpecularMaterial : public Material {
 public:
-    SpecularMaterial() : Material(), _thresholdAngleRad(PI / 1800.0) {}
-    SpecularMaterial(std::shared_ptr<Texture> texture, std::shared_ptr<Texture> emittedRadiance = std::make_shared<UniformTexture>(Color()), float thresholdAngleRad = PI / 1800.0)
-        : Material(texture, emittedRadiance), _thresholdAngleRad(thresholdAngleRad) {}
+    SpecularMaterial() : Material(), _blur(0.0f), _thresholdAngleRad(PI / 1800.0f) {}
+    SpecularMaterial(std::shared_ptr<Texture> texture, std::shared_ptr<Texture> emittedRadiance = std::make_shared<UniformTexture>(Color()),
+                     float blur = 0.0f, float thresholdAngleRad = PI / 1800.0f)
+        : Material(texture, emittedRadiance), _blur(blur), _thresholdAngleRad(thresholdAngleRad) {}
 
     Color eval(const Vec2& uv, float thetaIn, float thetaOut) const override {
         if (std::abs(thetaIn - thetaOut) < _thresholdAngleRad) {
             return _texture->color(uv);
         } else {
-            return Color(0.0, 0.0, 0.0);
+            return Color(0.0f, 0.0f, 0.0f);
         }
     };
 
-    Ray scatterRay(PCG& pcg, const Vec3& incomingDir, const Point3& interactionPoint,
-                   const Normal3& normal, int depth) const override {
-        Vec3 rayDir = incomingDir.normalize();
-        Vec3 norm(normal.x, normal.y, normal.z);
-        norm = norm.normalize();
-        double dotProd = dot(norm, rayDir);
+    Ray scatterRay(PCG& pcg, const HitRecord& rec, int depth) const override {
+        Vec3 reflectedDir = reflect(rec.ray.direction.normalize(), rec.normal.normalize());
 
-        Vec3 reflectedDir = rayDir - norm * 2.0 * dotProd;
+        // Moves the reflected direction by a random vector of length _blur
+        // in the same direction of the reflection. I don't think this is physical,
+        // but is probably better than sampling the cone uniformly.
+        // !!! The ray could go back inside the object...
+        if (_blur > 0.0f) {
+            reflectedDir += _blur * pcg.sampleHemisphere(reflectedDir);
+        }
 
-        return Ray{interactionPoint, reflectedDir, 1e-5, INF, depth};
+        return Ray{rec.worldPoint, reflectedDir, RAY_MIN, INF, depth};
     }
 
 private:
-    double _thresholdAngleRad;
+    float _blur, _thresholdAngleRad;
+};
+
+/**
+ * @class TransparentMaterial
+ * @brief Transparent material that refracts light.
+ * 
+ * Works properly only when completely immersed in a single material.
+ * For example, a glass ball cannot be half under water and half in air,
+ * because its refraction index is relative to the exterior material.
+ */
+class TransparentMaterial : public Material {
+public:
+    TransparentMaterial() : Material(), _refractionIndex(1.0f) {}
+    TransparentMaterial(std::shared_ptr<Texture> texture, std::shared_ptr<Texture> emittedRadiance = std::make_shared<UniformTexture>(Color()), float refractionIndex = 1.0f)
+        : Material(texture, emittedRadiance), _refractionIndex(refractionIndex), _inverseRefractionIndex(1.0f / refractionIndex) {}
+
+    Color eval(const Vec2& uv, float thetaIn = 0.0f, float thetaOut = 0.0f) const override { // to be changed
+        return _texture->color(uv) * INV_PI; // divide by pi to be consistent with the diffuse material (for now)
+    }
+
+    Ray scatterRay(PCG& pcg, const HitRecord& rec, int depth) const override {
+        // _refractioIndex is actually n1/n2, n1 is the RI of this object, n2 of the outside.
+        // n1/n2 sin(theta1) = sin(theta2), where 1 is the material where the ray starts, and 2 where it enters.
+        // So we use _refractionIndex when going from inside this object to outside,
+        // and _inverseRefractionIndex when the rays enters this object.
+        float RI = rec.isInside ? _refractionIndex : _inverseRefractionIndex;
+        
+        Vec3 refractedDir = refract(rec.ray.direction.normalize(), rec.normal.normalize(), RI);
+        return Ray(rec.worldPoint, refractedDir, RAY_MIN, INF, depth);
+    }
+
+private:
+    float _refractionIndex, _inverseRefractionIndex;
 };
 
 #endif

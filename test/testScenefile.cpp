@@ -171,7 +171,12 @@ void testParser() {
 
         "material sphere_material(\n"
         "    specular(uniform(<0.5, 0.5, 0.5>),\n"
-        "    uniform(<0, 0, 0>))\n"
+        "    uniform(<0, 0, 0>), 0.0, 45)\n"
+        ")\n\n"
+
+        "material glass_material(\n"
+        "    transparent(uniform(<1.0, 1.0, 1.0>),\n"
+        "    uniform(<0, 0, 0>), 1.5)\n"
         ")\n\n"
 
         "plane (sky_material, translation([0, 0, 100]) * rotationY(clock))\n"
@@ -194,14 +199,16 @@ void testParser() {
     sassert(scene.floatVariables["clock"] == 150.);
 
     // materials
-    sassert(scene.materials.size() == 3);
+    sassert(scene.materials.size() == 4);
     sassert(scene.materials.find("sphere_material") != scene.materials.end());
     sassert(scene.materials.find("sky_material") != scene.materials.end());
     sassert(scene.materials.find("ground_material") != scene.materials.end());
+    sassert(scene.materials.find("glass_material") != scene.materials.end());
 
     auto sphereMaterial = scene.materials["sphere_material"];
     auto skyMaterial = scene.materials["sky_material"];
     auto groundMaterial = scene.materials["ground_material"];
+    auto glassMaterial = scene.materials["glass_material"];
 
     sassert(skyMaterial->color({0., 0.}).isClose(Color(0., 0., 0.)));
 
@@ -209,10 +216,12 @@ void testParser() {
     sassert(groundMaterial->color({0.2501, 0.}).isClose(Color(0.1, 0.2, 0.5))); // 0.2501 instead of 0.25 just to be sure...
 
     sassert(sphereMaterial->color({0., 0.}).isClose(Color(0.5, 0.5, 0.5)));
+    sassert(glassMaterial->color({0., 0.}).isClose(Color(1.0, 1.0, 1.0)));
 
     sassert(skyMaterial->emittedColor({0., 0.}).isClose(Color(0.7, 0.5, 1.)));
     sassert(groundMaterial->emittedColor({0., 0.}).isClose(Color(0., 0., 0.)));
-    sassert(sphereMaterial->emittedColor({0., 0.}).isClose(Color(0, 0, 0)));
+    sassert(sphereMaterial->emittedColor({0., 0.}).isClose(Color(0., 0., 0.)));
+    sassert(glassMaterial->emittedColor({0., 0.}).isClose(Color(0., 0., 0.)));
 
     // shapes
     sassert(scene.world._shapes.size() == 3);
@@ -231,7 +240,7 @@ void testParser() {
     sassert(p.position.isClose(Point3(1., 1., 1.)));
     sassert(areClose(p.linearRadius, 2.));
 
-    cout << "parser works" << endl;
+    cout << "the parser works" << endl;
 }
 
 void testUndefinedMaterial() {
@@ -247,8 +256,8 @@ void testUndefinedMaterial() {
 void testDoubleCamera() {
     std::istringstream ss;
     ss.str(
-        "camera(perspective, rotationZ(30) * translation([-4, 0, 1]), 1.0, 1.0)\n"
-        "camera(orthogonal, identity, 1.0, 1.0)"
+        "camera(perspective, 1, 100, 1, rotationZ(30) * translation([-4, 0, 1]))\n"
+        "camera(orthogonal, 1, 100, 1, identity)"
     );
     InputStream stream(ss, 0);
 

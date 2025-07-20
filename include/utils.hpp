@@ -11,11 +11,16 @@
 #include <unordered_map>
 
 inline constexpr float PI = std::numbers::pi_v<float>; // c++20
+inline constexpr float INV_PI = 1.0f / PI;
 inline constexpr float INF = std::numeric_limits<float>::infinity();
+inline constexpr float RAY_MIN = 1e-5f;
+
+struct Vec3; // avoid circular inclusion
+struct Normal3;
 
 
 
-inline float degToRad(float degrees){ return degrees * PI / 180.; }
+inline float degToRad(float degrees){ return degrees * PI / 180.0f; }
 
 inline float clamp(float x) { return x / (1 + x); }
 
@@ -35,6 +40,10 @@ inline bool areClose(const T1& v, const T1& u, float epsilon = 1e-5f) {
     return (areClose(v.x, u.x, epsilon) && areClose(v.y, u.y, epsilon) && areClose(v.z, u.z, epsilon));
 }
 
+// geometric transformations on vectors, v and n must be normalized
+Vec3 reflect(const Vec3& v, const Normal3& n);
+Vec3 refract(const Vec3& v, const Normal3& n, float refractionIndexRatio);
+
 // utility for the lexer
 inline bool isCharSkippable(const char& c) {
     return (c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '#');
@@ -44,27 +53,12 @@ inline bool isCharSkippable(const char& c) {
 /**
  * @brief Validate a string in the format "name:value", where value is convertible to float.
  * 
+ * Used to define a float variable used in a scene file from command line.
+ * 
  * @param s String to validate.
  * @param floatVariables Container for name-value pairs.
  */
-inline void validateFloatVariable(std::string& s, std::unordered_map<std::string, float>& floatVariables) {
-    std::string key;
-    float value;
-
-    size_t position = s.find(':');
-    if (position == std::string::npos)
-        throw std::invalid_argument("ERROR: \"" + s + "\" does not define a float variable\n"
-                                    "the correct syntax is --float=name:value");
-
-    key = s.substr(0, position);
-
-    auto stringVal = s.erase(0, position + 1);
-    try { value = std::stof(stringVal); }
-    catch (std::out_of_range& e) { throw std::out_of_range(stringVal + " is out of float range"); }
-    catch (std::invalid_argument& e) { throw std::invalid_argument(stringVal + " is not a valid number"); }
-
-    floatVariables[key] = value;
-}
+void validateFloatVariable(std::string& s, std::unordered_map<std::string, float>& floatVariables);
 
 
 
@@ -117,25 +111,21 @@ public:
     uint64_t state;
     uint64_t inc;
 
-    PCG(uint64_t initState = 42, uint64_t initSeq = 54) {
-        state = 0;
-        inc = (initSeq << 1u) | 1u;
-        random();
-        state = (state + initState);
-        random();
-    }
+    PCG(uint64_t initState = 42, uint64_t initSeq = 54);
 
-    uint32_t randomUint32() {
-        uint64_t oldState = state;
-        state = static_cast<uint64_t>(oldState * 6364136223846793005ULL + inc);
-        uint32_t xorshifted = static_cast<uint32_t>(((oldState >> 18u) ^ oldState) >> 27u);
-        uint32_t rot = static_cast<uint32_t>(oldState >> 59u);
-        return (((xorshifted >> rot) | (xorshifted << ((-rot) & 31))));
-    }
+    uint32_t randomUint32();
 
     float random() {
         return randomUint32() / static_cast<float>(0xffffffffU);
     }
+
+    float random(float min, float max) {
+        return min + random() * (max - min);
+    }
+
+    Vec3 randomVersor();
+    Vec3 sampleHemisphere(Vec3 n);
+    Vec3 sampleHemisphere(Normal3 n);
 };
 
 

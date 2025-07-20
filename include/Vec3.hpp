@@ -33,6 +33,13 @@ struct Vec3 {
     // Squared norm and norm
     inline float norm2() const { return x * x + y * y + z * z; }
     inline float norm() const { return std::sqrt(norm2()); }
+
+    Vec3& operator+=(const Vec3& other) {
+        x += other.x;
+        y += other.y;
+        z += other.z;
+        return *this;
+    }
     
     // Normalize the Vector
     inline Vec3 normalize() const {
@@ -45,6 +52,9 @@ struct Vec3 {
         return areClose(*this, other, epsilon);
     }
 };
+
+// Scalar multiplication, reverse order
+inline Vec3 operator*(float scalar, const Vec3& v){ return Vec3(scalar * v.x, scalar * v.y, scalar * v.z); }
 
 // Dot product
 inline float dot(const Vec3& v, const Vec3& u) { return v.x * u.x + v.y * u.y + v.z * u.z; }
