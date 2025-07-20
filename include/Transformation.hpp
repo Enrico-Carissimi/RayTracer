@@ -10,10 +10,10 @@
  */
 enum class Axis {X, Y, Z};
 
-inline constexpr float IDENTITY4[16] = {1., 0., 0., 0.,
-                                        0., 1., 0., 0.,
-                                        0., 0., 1., 0.,
-                                        0., 0., 0., 1.};
+inline constexpr float IDENTITY4[16] = {1.0f, 0.0f, 0.0f, 0.0f,
+                                        0.0f, 1.0f, 0.0f, 0.0f,
+                                        0.0f, 0.0f, 1.0f, 0.0f,
+                                        0.0f, 0.0f, 0.0f, 1.0f};
 
 // This explicit matrix multiplication is around 4.5 times faster than using for loops.
 // There is no gain in speed in the rendering since matrix multiplication is only used
@@ -106,9 +106,9 @@ public:
 
 // scaling
 inline Transformation scaling(float x, float y, float z) {
-    float mat[16] = {0.}, inv[16] = {0.};
-    mat[0] = x, mat[5] = y, mat[10] = z, mat[15] = 1.;
-    inv[0] = 1. / x, inv[5] = 1. / y, inv[10] = 1. / z, inv[15] = 1.;
+    float mat[16] = {0.0f}, inv[16] = {0.0f};
+    mat[0] = x, mat[5] = y, mat[10] = z, mat[15] = 1.0f;
+    inv[0] = 1.0f / x, inv[5] = 1.0f / y, inv[10] = 1.0f / z, inv[15] = 1.0f;
     return Transformation(mat, inv);
 }
 
@@ -117,9 +117,9 @@ inline Transformation scaling(const Vec3& vec) {
 }
 
 inline Transformation scaling(float s, Axis axis) {
-    if (axis == Axis::X) return scaling(s, 1., 1.);
-    if (axis == Axis::Y) return scaling(1., s, 1.);
-    return scaling(1., 1., s); // Z
+    if (axis == Axis::X) return scaling(s, 1.0f, 1.0f);
+    if (axis == Axis::Y) return scaling(1.0f, s, 1.0f);
+    return scaling(1.0f, 1.0f, s); // Z
 }
 
 inline Transformation scaling(float s) {
@@ -140,41 +140,41 @@ inline Transformation translation(const Vec3& vec) {
 
 // rotation
 inline Transformation rotation(float angle, Axis axis) {
-    float mat[16] = {0.}, inv[16] = {0.};
-    mat[15] = 1., inv[15] = 1.; // element [3][3] is always 1
+    float mat[16] = {0.0f}, inv[16] = {0.0f};
+    mat[15] = 1.0f, inv[15] = 1.0f; // element [3][3] is always 1
 
     float theta = degToRad(angle);
     float cos = std::cos(theta), sin = std::sin(theta);
 
     switch (axis) {
         case Axis::X:
-            mat[0] = 1.;
+            mat[0] = 1.0f;
             mat[5] = cos, mat[6] = -sin;
             mat[9] = sin, mat[10] = cos;
         
-            inv[0] = 1.;
+            inv[0] = 1.0f;
             inv[5] = cos, inv[6] = sin;
             inv[9] = -sin, inv[10] = cos;
             break;
         
         case Axis::Y:
             mat[0] = cos, mat[2] = sin;
-            mat[5] = 1.;
+            mat[5] = 1.0f;
             mat[8] = -sin, mat[10] = cos;
         
             inv[0] = cos, inv[2] = -sin;
-            inv[5] = 1.;
+            inv[5] = 1.0f;
             inv[8] = sin, inv[10] = cos;
             break;
         
         case Axis::Z:
             mat[0] = cos, mat[1] = -sin;
             mat[4] = sin, mat[5] = cos;
-            mat[10] = 1.;
+            mat[10] = 1.0f;
         
             inv[0] = cos, inv[1] = sin;
             inv[4] = -sin, inv[5] = cos;
-            inv[10] = 1.;
+            inv[10] = 1.0f;
             break;
         }
         
