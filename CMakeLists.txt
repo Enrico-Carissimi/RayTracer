@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.31.6)
 
-project(RayTracer VERSION 1.0.0
+project(RayTracer VERSION 1.1.0
         DESCRIPTION "Simple ray tracer for a university project")
 
 # specify the C++ standard with an interface library
@@ -12,7 +12,7 @@ set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 
 target_compile_options(compilerFlags INTERFACE
-  "$<$<CONFIG:Debug>:$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wformat=2;-Wunused>>>"
+  "$<$<CONFIG:Debug>:$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wformat=2;-Wunused;-Wno-missing-field-initializers>>>"
   "$<$<CONFIG:Debug>:$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>>"
 )
 
