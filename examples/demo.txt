@@ -7,7 +7,7 @@ camera(perspective, 1.33333, 640, 1., rotationZ(angle) * translation([-1., 0., 0
 material centralMat(transparent(uniform(<1., 0.8, 0.6>), uniform(<0., 0., 0.>), 1.6))
 material centralBubble(transparent(uniform(<1., 1., 1.>), uniform(<0., 0., 0.>), 0.625)) # 0.625 = 1/1.6
 
-material reflectMat(specular(uniform(<0.1, 0.9, 0.4>), uniform(<0., 0., 0.>)))
+material reflectMat(specular(uniform(<0.1, 0.9, 0.4>), uniform(<0., 0., 0.>), 0., 45))
 material earth(diffuse(image("test/earth.pfm"), uniform(<0., 0., 0.>)))
 
 material skyMat(diffuse(uniform(<0., 0., 0.>), uniform(<1., 1., 1.>)))
