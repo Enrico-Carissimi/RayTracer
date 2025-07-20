@@ -53,8 +53,8 @@ inline Ray _castPerspective(float u, float v, float d, float a) {
  */
 class Camera {
 public:
-    int imageWidth, imageHeight;
     float aspectRatio;
+    int imageWidth, imageHeight;
     Transformation transformation;
     HDRImage image;
     PCG pcg;
