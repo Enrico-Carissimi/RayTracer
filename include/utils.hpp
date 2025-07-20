@@ -11,14 +11,16 @@
 #include <unordered_map>
 
 inline constexpr float PI = std::numbers::pi_v<float>; // c++20
+inline constexpr float INV_PI = 1.0f / PI;
 inline constexpr float INF = std::numeric_limits<float>::infinity();
+inline constexpr float RAY_MIN = 1e-5f;
 
 struct Vec3; // avoid circular inclusion
 struct Normal3;
 
 
 
-inline float degToRad(float degrees){ return degrees * PI / 180.; }
+inline float degToRad(float degrees){ return degrees * PI / 180.0f; }
 
 inline float clamp(float x) { return x / (1 + x); }
 
