@@ -35,9 +35,11 @@ void writeFloat(std::ostream& stream, float value, Endianness endianness) {
   
     switch (endianness) {
     case Endianness::LITTLE:
-        for (int i{}; i < 4; ++i) stream << bytes[i]; break; // Forward loop   
+        for (int i{}; i < 4; ++i) stream << bytes[i]; // Forward loop 
+        break;
     case Endianness::BIG:
-        for (int i{3}; i >= 0; --i) stream << bytes[i]; break; // Backward loop
+        for (int i{3}; i >= 0; --i) stream << bytes[i]; // Backward loop
+        break;
     }
 }
 
