@@ -53,10 +53,12 @@ void HDRImage::readPFM(std::istream& input) {
 std::vector<uint8_t> HDRImage::pixelsToLDR(float gamma) {
     int length = _width * _height;
     std::vector<uint8_t> data(3 * length);
+    float invGamma = 1.0f / gamma;
+    
     for (int i = 0; i < length; i++) {
-        data[3 * i] = (255 * std::pow(_pixels[i].r, gamma));
-        data[3 * i + 1] = (255 * std::pow(_pixels[i].g, gamma));
-        data[3 * i + 2] = (255 * std::pow(_pixels[i].b, gamma));
+        data[3 * i] = (255 * std::pow(_pixels[i].r, invGamma));
+        data[3 * i + 1] = (255 * std::pow(_pixels[i].g, invGamma));
+        data[3 * i + 2] = (255 * std::pow(_pixels[i].b, invGamma));
     }
 
     return data;
