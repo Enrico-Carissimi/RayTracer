@@ -48,8 +48,10 @@ The default output is "image.png". You can choose the algorithm used to render t
 
 You can quickly create a low-quality demo image with:
 ```
-RayTracer render examples/demo.txt -A 1 -n 1 
+RayTracer render examples/demo.txt -A 1 -n 1
 ```
+This command works from the source directory (the path to the executable is ./build/RayTracer); if you work in the build directory, you'll need to change the scene file path to `../examples/demo.txt`, but you'll also need to change the [`test/earth.pfm` path inside the scene file](https://github.com/Enrico-Carissimi/RayTracer/blob/c1265c7cfbf03d2d45f8485ff45d8063e673a486/examples/demo.txt#L11) to `../test/earth.pfm`.
+
 If you want a higher quality demo, with `-A 4 -n 3` it's not that slow and a lot better.
 
 ### Scene files

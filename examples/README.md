@@ -16,7 +16,7 @@ This program reads the scene to render from a text file, with the syntax describ
 - Textures:
     - Uniform: uniform([color]);
     - Checkered: checkered([color] first, [color] second, [float] number of step);
-    - From image: image([string] file name). The file must be a .pfm image, paths are relative to the executable.
+    - From image: image([string] file name). The file must be a .pfm image, paths are relative to executable call location.
 - Materials:
     - Diffuse: material identifier(diffuse([texture], [texture] emitted radiance));
     - Reflective: material identifier(specular([texture], [texture] emitted radiance, [float] blur)), where "blur" is optional, 0 if omitted;
