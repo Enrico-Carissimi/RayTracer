@@ -93,7 +93,7 @@ Token InputStream::readStringToken(SourceLocation location) {
 
 Token InputStream::readNumberToken(SourceLocation location) {
     std::string value = "";
-    bool dots = false, es = false, minus = false;
+    bool dots = false, es = false;
 
     while (true) {
         char c = peek();

@@ -79,9 +79,7 @@ void testWritePMF() {
 
 
 
-int main(){
-    bool exceptionThrown = false; // used to test exception, reset to false after each test
-
+int main() {
     // test readLine
     std::istringstream iss("hiii\nthis is a test!");
     sassert(readLine(iss) == "hiii");

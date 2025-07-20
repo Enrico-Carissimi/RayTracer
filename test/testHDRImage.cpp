@@ -35,7 +35,7 @@ int main() {
 
     // check average luminosity
     image = HDRImage(2, 1); // reset to black
-    float a = image.averageLuminosity(); // check the program doesn't crash when all pixels are 0
+    image.averageLuminosity(); // check the program doesn't crash when all pixels are 0
     image.setPixel(0, 0, Color(5., 10., 15.));
     image.setPixel(1, 0, Color(500., 1000., 1500.));
     sassert(isClose(image.averageLuminosity(0.), 100.));

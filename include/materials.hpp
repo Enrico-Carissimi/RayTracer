@@ -28,7 +28,7 @@ public:
     UniformTexture() : _color(Color()) {}
     UniformTexture(const Color& c) : _color(c) {}
 
-    Color color(const Vec2& uv) const override {
+    Color color(const Vec2&) const override {
         return _color;
     }
 
@@ -52,8 +52,8 @@ public:
     }
 
 private:
-    int _nSteps;
     Color _color1, _color2;
+    int _nSteps;
 };
 
 /**
@@ -114,7 +114,7 @@ public:
     DiffuseMaterial(std::shared_ptr<Texture> texture, std::shared_ptr<Texture> emittedRadiance = std::make_shared<UniformTexture>(Color()))
         : Material(texture, emittedRadiance) {}
 
-    Color eval(const Vec2& uv, float thetaIn = 0.0f, float thetaOut = 0.0f) const override {
+    Color eval(const Vec2& uv, float, float) const override {
         return _texture->color(uv) * INV_PI;
     }
 
@@ -174,11 +174,11 @@ public:
     TransparentMaterial(std::shared_ptr<Texture> texture, std::shared_ptr<Texture> emittedRadiance = std::make_shared<UniformTexture>(Color()), float refractionIndex = 1.0f)
         : Material(texture, emittedRadiance), _refractionIndex(refractionIndex), _inverseRefractionIndex(1.0f / refractionIndex) {}
 
-    Color eval(const Vec2& uv, float thetaIn = 0.0f, float thetaOut = 0.0f) const override { // to be changed
+    Color eval(const Vec2& uv, float, float) const override { // to be changed
         return _texture->color(uv) * INV_PI; // divide by pi to be consistent with the diffuse material (for now)
     }
 
-    Ray scatterRay(PCG& pcg, const HitRecord& rec, int depth) const override {
+    Ray scatterRay(PCG&, const HitRecord& rec, int depth) const override {
         // _refractioIndex is actually n1/n2, n1 is the RI of this object, n2 of the outside.
         // n1/n2 sin(theta1) = sin(theta2), where 1 is the material where the ray starts, and 2 where it enters.
         // So we use _refractionIndex when going from inside this object to outside,
