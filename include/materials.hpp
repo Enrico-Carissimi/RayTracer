@@ -110,20 +110,17 @@ protected:
  */
 class DiffuseMaterial : public Material {
 public:
-    DiffuseMaterial() : Material(), _reflectance(1.0f) {}
-    DiffuseMaterial(std::shared_ptr<Texture> texture, std::shared_ptr<Texture> emittedRadiance = std::make_shared<UniformTexture>(Color()), float reflectance = 1.0f)
-        : Material(texture, emittedRadiance), _reflectance(reflectance / PI) {}
+    DiffuseMaterial() : Material() {}
+    DiffuseMaterial(std::shared_ptr<Texture> texture, std::shared_ptr<Texture> emittedRadiance = std::make_shared<UniformTexture>(Color()))
+        : Material(texture, emittedRadiance) {}
 
     Color eval(const Vec2& uv, float thetaIn = 0.0f, float thetaOut = 0.0f) const override {
-        return _texture->color(uv) * _reflectance;
+        return _texture->color(uv) * INV_PI;
     }
 
     Ray scatterRay(PCG& pcg, const HitRecord& rec, int depth) const override {
-        return Ray(rec.worldPoint, pcg.sampleHemisphere(rec.normal), 1e-5f, INF, depth);
+        return Ray(rec.worldPoint, pcg.sampleHemisphere(rec.normal), RAY_MIN, INF, depth);
     }
-
-private:
-    float _reflectance; // is already divided by pi in the constructor
 };
 
 /**
@@ -156,7 +153,7 @@ public:
             reflectedDir += _blur * pcg.sampleHemisphere(reflectedDir);
         }
 
-        return Ray{rec.worldPoint, reflectedDir, 1e-5f, INF, depth};
+        return Ray{rec.worldPoint, reflectedDir, RAY_MIN, INF, depth};
     }
 
 private:
@@ -178,7 +175,7 @@ public:
         : Material(texture, emittedRadiance), _refractionIndex(refractionIndex), _inverseRefractionIndex(1.0f / refractionIndex) {}
 
     Color eval(const Vec2& uv, float thetaIn = 0.0f, float thetaOut = 0.0f) const override { // to be changed
-        return _texture->color(uv) * (1.0f / PI); // divide by pi to be consistent with the diffuse material (for now)
+        return _texture->color(uv) * INV_PI; // divide by pi to be consistent with the diffuse material (for now)
     }
 
     Ray scatterRay(PCG& pcg, const HitRecord& rec, int depth) const override {
@@ -189,7 +186,7 @@ public:
         float RI = rec.isInside ? _refractionIndex : _inverseRefractionIndex;
         
         Vec3 refractedDir = refract(rec.ray.direction.normalize(), rec.normal.normalize(), RI);
-        return Ray(rec.worldPoint, refractedDir, 1e-5f, INF, depth);
+        return Ray(rec.worldPoint, refractedDir, RAY_MIN, INF, depth);
     }
 
 private:
