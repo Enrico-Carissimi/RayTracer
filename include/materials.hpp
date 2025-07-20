@@ -172,13 +172,22 @@ class TransparentMaterial : public Material {
 public:
     TransparentMaterial() : Material(), _refractionIndex(1.0f) {}
     TransparentMaterial(std::shared_ptr<Texture> texture, std::shared_ptr<Texture> emittedRadiance = std::make_shared<UniformTexture>(Color()), float refractionIndex = 1.0f)
-        : Material(texture, emittedRadiance), _refractionIndex(refractionIndex), _inverseRefractionIndex(1.0f / refractionIndex) {}
+        : Material(texture, emittedRadiance), _refractionIndex(refractionIndex), _inverseRefractionIndex(1.0f / refractionIndex),
+          _R0((1.0f - _refractionIndex) / (1.0f + _refractionIndex)) { _R0 *= _R0; }
 
     Color eval(const Vec2& uv, float, float) const override { // to be changed
         return _texture->color(uv) * INV_PI; // divide by pi to be consistent with the diffuse material (for now)
     }
 
-    Ray scatterRay(PCG&, const HitRecord& rec, int depth) const override {
+    Ray scatterRay(PCG& pcg, const HitRecord& rec, int depth) const override {
+        Vec3 v = rec.ray.direction.normalize();
+        Normal3 n = rec.normal.normalize();
+
+        // reflect the ray with probability given by the reflectance
+        // otherwise refract (refraction could still reflect if the angle is appropriate)
+        if (pcg.random() < reflectance(-dot(v, n)))
+            return Ray(rec.worldPoint, reflect(v, n), RAY_MIN, INF, depth);
+
         // _refractioIndex is actually n1/n2, n1 is the RI of this object, n2 of the outside.
         // n1/n2 sin(theta1) = sin(theta2), where 1 is the material where the ray starts, and 2 where it enters.
         // So we use _refractionIndex when going from inside this object to outside,
@@ -190,7 +199,13 @@ public:
     }
 
 private:
-    float _refractionIndex, _inverseRefractionIndex;
+    float _refractionIndex, _inverseRefractionIndex, _R0;
+
+    // from https://shorturl.at/hB6hm (it's wikipedia, the url to the highlighted text was disgustingly long)
+    // and https://en.wikipedia.org/wiki/Schlick%27s_approximation
+    float reflectance(float cos) const {
+        return _R0 + (1.0f - _R0) * std::pow(1.0f - cos, 5.0f);
+    }
 };
 
 #endif
