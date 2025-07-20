@@ -17,10 +17,10 @@ public:
     float tmin, tmax;
     int depth;
 
-    Ray() : origin(Point3()), direction(Vec3(0, 0, 1)), tmin(1e-5), tmax(std::numeric_limits<float>::infinity()), depth(0) {}
+    Ray() : origin(Point3()), direction(Vec3(0.0f, 0.0f, 1.0f)), tmin(RAY_MIN), tmax(INF), depth(0) {}
 
-    Ray(Point3 origin, Vec3 direction, float tmin = 1e-5, float tmax = std::numeric_limits<float>::infinity(), int depth = 0) : 
-    origin(origin), direction(direction), tmin(tmin), tmax(tmax), depth(depth) {}
+    Ray(Point3 origin, Vec3 direction, float tmin = RAY_MIN, float tmax = INF, int depth = 0)
+        : origin(origin), direction(direction), tmin(tmin), tmax(tmax), depth(depth) {}
 
     bool isClose(const Ray&other, float epsilon = 1e-5f) {
         return origin.isClose(other.origin, epsilon) &&
