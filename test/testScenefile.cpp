@@ -171,7 +171,7 @@ void testParser() {
 
         "material sphere_material(\n"
         "    specular(uniform(<0.5, 0.5, 0.5>),\n"
-        "    uniform(<0, 0, 0>), 0.0)\n"
+        "    uniform(<0, 0, 0>), 0.0, 45)\n"
         ")\n\n"
 
         "material glass_material(\n"
