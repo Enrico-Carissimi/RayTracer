@@ -1,5 +1,11 @@
 # HEAD
 
+# Version 1.1.0
+
+- Add transparent material [#12](https://github.com/Enrico-Carissimi/RayTracer/pull/12)
+- Add optional "blurriness" to reflective materials [#12](https://github.com/Enrico-Carissimi/RayTracer/pull/12)
+- Fix/change gamma correction: now uses the gamma parameter as intended [#14](https://github.com/Enrico-Carissimi/RayTracer/pull/14)
+
 # Version 1.0.0
 
 - Add `render` command and remove `demo` [#10](https://github.com/Enrico-Carissimi/RayTracer/pull/10)
