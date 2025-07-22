@@ -1,7 +1,9 @@
-# demo for the point light renderer, not much to see with other algorithms
-# white sphere with various lights around and a sloped plane
-# set the luminosity to 0.1 (-l 0.1) or the sphere is gonna be just white
-# you cna change the agle to go around the sphere (-f angle:deg) and the slope of the plane (-f slope:deg)
+# Demo for the point light renderer, not much to see with other algorithms.
+# White sphere with various lights around and a sloped plane.
+# !!! Set the luminosity manually or the sphere is gonna be just white.
+# Suggested between ~0.1-1 (-l 0.1).
+# Also works setting -a to ~0.01.
+# You can change the angle to go around the sphere (-f angle:deg) and the slope of the plane (-f slope:deg).
 
 float angle(0)
 float slope(-30)
