@@ -39,6 +39,8 @@
 *.jpg
 *.jpeg
 *.pfm
+!examples/demo.png
+!examples/blurry.png
 !test/earth.pfm
 !test/memorial.pfm
 !test/reference_be.pfm

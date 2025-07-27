@@ -57,6 +57,11 @@ If you want a higher quality demo, with `-A 4 -n 3` it's not that slow and a lot
 ### Scene files
 The scene to render must be defined in a text file, see [examples/README.md](https://github.com/Enrico-Carissimi/RayTracer/blob/main/examples/README.md) for more information.
 
+### Examples
+
+![Demo image from demo.txt](examples/demo.png "Everything you could ever want in an image")
+![Demo image with many reflections from blurry.txt](examples/blurry.png "Reflections!")
+
 ## History
 See [CHANGELOG.md](https://github.com/Enrico-Carissimi/RayTracer/blob/main/CHANGELOG.md).
 
